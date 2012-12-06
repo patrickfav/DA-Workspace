@@ -1,5 +1,7 @@
 *.class
 
+ZoneSimulator/.idea/workspace.xml
+
 # Package Files #
 *.jar
 *.war
