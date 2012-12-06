@@ -1,8 +1,9 @@
 *.class
 
 ZoneSimulator/.idea/workspace.xml
+ZoneSimulator/out
+ZoneSimulator/bin
 
 # Package Files #
-*.jar
 *.war
 *.ear
