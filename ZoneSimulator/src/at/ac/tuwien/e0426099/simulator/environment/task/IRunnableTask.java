@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.memory.entities.KiB;
+import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 
@@ -26,7 +26,7 @@ public interface IRunnableTask {
 
 	public TaskStatus getStatus();
 	public ProcessingRequirements getProcessingRequirements();
-	public KiB getMemoryDemand();
+	public MemoryAmount getMemoryDemand();
 
 	public void setTaskListener(ITaskListener listener);
 }

@@ -1,14 +1,14 @@
 package at.ac.tuwien.e0426099.simulator.environment.memory.entities;
 
 /**
- * Represents amount of Memory (in Kilobyte in that case)
+ * Represents amount of Memory
  * @author PatrickF
  * @since 07.12.12
  */
-public class KiB {
+public class MemoryAmount {
 	private long amountInKiloByte;
 
-	public KiB(long amountInKiloByte) {
+	public MemoryAmount(long amountInKiloByte) {
 		this.amountInKiloByte = amountInKiloByte;
 	}
 
@@ -18,5 +18,17 @@ public class KiB {
 
 	public void setAmountInKiloByte(long amountInKiloByte) {
 		this.amountInKiloByte = amountInKiloByte;
+	}
+
+	public long getAmountInByte() {
+		return amountInKiloByte *1000;
+	}
+
+	public double getAmountInMegaByte() {
+		return amountInKiloByte/1000;
+	}
+
+	public double getAmountInGigaByte() {
+		return amountInKiloByte/1000/1000;
 	}
 }

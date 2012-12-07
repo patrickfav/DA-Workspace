@@ -1,6 +1,9 @@
 package at.ac.tuwien.e0426099.simulator.environment.memory;
 
-import at.ac.tuwien.e0426099.simulator.environment.memory.entities.KiB;
+import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.memory.entities.TaskInMemory;
+
+import java.util.List;
 
 /**
  * Basically the RAM of the System
@@ -8,6 +11,8 @@ import at.ac.tuwien.e0426099.simulator.environment.memory.entities.KiB;
  * @since 07.12.12
  */
 public class WorkingMemory {
-	private KiB sizeOfMemory;
+	private MemoryAmount sizeOfMemory;
+	private List<TaskInMemory> taskInMemoryList;
 
+	
 }
