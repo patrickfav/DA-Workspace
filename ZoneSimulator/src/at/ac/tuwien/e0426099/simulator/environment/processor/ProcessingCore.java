@@ -1,14 +1,13 @@
-package at.ac.tuwien.e0426099.simulator.simulation.processor;
+package at.ac.tuwien.e0426099.simulator.environment.processor;
 
-import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasks;
-import at.ac.tuwien.e0426099.simulator.simulation.task.IRunnableTask;
-import at.ac.tuwien.e0426099.simulator.simulation.task.ITaskListener;
-import at.ac.tuwien.e0426099.simulator.simulation.task.comparator.ProcPwrReqComparator;
+import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
+import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqComparator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author PatrickF
@@ -35,17 +34,18 @@ public class ProcessingCore implements ITaskListener{
 		id=UUID.randomUUID();
 	}
 
-	public synchronized void addTask(IRunnableTask task) throws TooMuchConcurrentTasks {
+	public synchronized void addTask(IRunnableTask task) throws TooMuchConcurrentTasksException {
 		task.setTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
-			throw new TooMuchConcurrentTasks("Cannot add this task "+task.getReadAbleName()+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
+			throw new TooMuchConcurrentTasksException("Cannot add this task "+task.getReadAbleName()+
+					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
 			pauseAllRunningTasks();
 
 			currentRunningTasks.add(task); //add new task
 
-			rebalanceTasks();
+			reBalanceTasks();
 
 			runAllTasks();
 		}
@@ -59,15 +59,46 @@ public class ProcessingCore implements ITaskListener{
 	public synchronized void onTaskFinished(IRunnableTask task) {
 		pauseAllRunningTasks();
 
-		currentRunningTasks.remove(task);
+		currentRunningTasks.remove(task); //removed finished task
 
-		rebalanceTasks();
+		reBalanceTasks();
 
 		runAllTasks();
+
+		processingUnit.onTaskFinished(this,task); //inform processing unit
 	}
+
+	public int getMaxConcurrentTasks() {
+		return maxConcurrentTasks;
+	}
+
+	public synchronized int getCurrentRunningTasksSize() {
+		return currentRunningTasks.size();
+	}
+
+	/**
+	 * Returns the load of this core
+	 * @return 0.0 - 1.0 where 1.0 is 100%
+	 */
+	public synchronized double getLoad() {
+		long sum = 0;
+		for(IRunnableTask t: currentRunningTasks) {
+			sum += t.getCurrentlyAssignedProcessingPower();
+		}
+		return rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)) / (double) sum;
+	}
+
+	public synchronized ProcessingCoreInfo getInfo() {
+		return new ProcessingCoreInfo(id,getLoad(),getCurrentRunningTasksSize(),maxConcurrentTasks);
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
 	/* ********************************************************************************** PRIVATES */
 
-	private void rebalanceTasks() {
+	private void reBalanceTasks() {
 		Collections.sort(currentRunningTasks, new ProcPwrReqComparator()); //sort lower demanding task first
 
 		double currentProcPwrP = rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)); //pwr - penality for concurrent processing
@@ -86,7 +117,7 @@ public class ProcessingCore implements ITaskListener{
 
 	private void pauseAllRunningTasks() {
 		for(IRunnableTask t: currentRunningTasks) {
-			t.pauseProcessing();
+			t.pause();
 		}
 	}
 
@@ -96,7 +127,7 @@ public class ProcessingCore implements ITaskListener{
 		}
 	}
 
-	/* ********************************************************************************** INTERFACE */
+	/* ********************************************************************************** INNER CLASSES */
 
 	public interface ProcessingUnitListener {
 		public void onTaskFinished(ProcessingCore c,IRunnableTask t);

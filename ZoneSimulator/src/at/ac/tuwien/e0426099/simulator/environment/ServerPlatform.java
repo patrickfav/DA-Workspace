@@ -1,4 +1,4 @@
-package at.ac.tuwien.e0426099.simulator.simulation;
+package at.ac.tuwien.e0426099.simulator.environment;
 
 /**
  * @author PatrickF

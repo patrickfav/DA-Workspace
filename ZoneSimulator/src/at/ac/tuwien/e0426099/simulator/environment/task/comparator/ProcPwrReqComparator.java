@@ -1,6 +1,6 @@
-package at.ac.tuwien.e0426099.simulator.simulation.task.comparator;
+package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
 
-import at.ac.tuwien.e0426099.simulator.simulation.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
 
 import java.util.Comparator;
 
