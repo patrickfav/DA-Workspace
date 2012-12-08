@@ -8,6 +8,11 @@ public class ProcessingRequirements {
 	private Long maxComputationalUtilization;
 	private Long msNeededToFinishWithMaxUtilization;
 
+	public ProcessingRequirements(Long maxComputationalUtilization, Long msNeededToFinishWithMaxUtilization) {
+		this.maxComputationalUtilization = maxComputationalUtilization;
+		this.msNeededToFinishWithMaxUtilization = msNeededToFinishWithMaxUtilization;
+	}
+
 	public Long getMaxComputationalUtilization() {
 		return maxComputationalUtilization;
 	}

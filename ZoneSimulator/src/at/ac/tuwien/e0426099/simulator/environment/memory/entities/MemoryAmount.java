@@ -31,4 +31,10 @@ public class MemoryAmount {
 	public double getAmountInGigaByte() {
 		return amountInKiloByte/1000/1000;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof MemoryAmount && amountInKiloByte == ((MemoryAmount) obj).getAmountInKiloByte();
+	}
+
 }

@@ -11,11 +11,13 @@ public class TaskInMemory {
 	private SubTaskId subTaskId;
 	private MemoryAmount amountAssignedToMemory;
 	private MemoryAmount amountNotAssignable;
+	private boolean somethingHasChanged;
 
 	public TaskInMemory(SubTaskId subTaskId, MemoryAmount amountAssignedToMemory, MemoryAmount amountNotAssignable) {
 		this.subTaskId = subTaskId;
 		this.amountAssignedToMemory = amountAssignedToMemory;
 		this.amountNotAssignable = amountNotAssignable;
+		somethingHasChanged=false;
 	}
 
 	public SubTaskId getSubTaskId() {
@@ -42,6 +44,15 @@ public class TaskInMemory {
 		this.amountNotAssignable = amountNotAssignable;
 	}
 
+	public void markChanged() {
+		somethingHasChanged=true;
+	}
+	public void unMarkChanged() {
+		somethingHasChanged=false;
+	}
+	public boolean isSomethingHasChanged() {
+		return somethingHasChanged;
+	}
 
 	/**
 	 * How much memory needed by task execution did not fit in memory (RAM)

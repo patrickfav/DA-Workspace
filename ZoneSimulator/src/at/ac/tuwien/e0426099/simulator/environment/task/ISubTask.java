@@ -13,7 +13,7 @@ public interface ISubTask {
 	public enum TaskStatus{NOT_STARTED,RUNNING,PAUSED,FINISHED,SCHEDULING_ERROR,ERROR}
 	public enum TaskType{PROCESSING,NETWORK_IO,DISK_IO}
 
-	public SubTaskId getId();
+	public SubTaskId getSubTaskId();
 	public String getReadAbleName();
 
 	public void pause();
@@ -21,6 +21,7 @@ public interface ISubTask {
 	public void fail(Exception e);
 
 	public void updateResources(long resources);
+	public void setProcessingHandicap(double percentage);
 
 	public long getCurrentlyAssignedProcessingPower();
 
