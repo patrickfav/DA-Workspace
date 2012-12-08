@@ -1,10 +1,13 @@
 package at.ac.tuwien.e0426099.simulator.environment.processor;
 
-import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import at.ac.tuwien.e0426099.simulator.environment.Platform;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
-import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManagementListener;
+import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.IScheduler;
+import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
+import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,37 +16,42 @@ import java.util.List;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingUnit  implements ProcessingCore.ProcessingUnitListener {
+public class ProcessingUnit  implements ProcessingUnitListener {
 
 	private List<ProcessingCore> cores;
 	private IScheduler scheduler;
 
-	private List<IRunnableTask> finnishedTasks;
-	private List<IRunnableTask> failedTasks;
+	private List<SubTaskId> finnishedSubTasks;
+	private List<SubTaskId> failedSubTasks;
 
-	public ProcessingUnit(IScheduler scheduler) {
+	private TaskManagementListener memoryCallBack;
+
+	public ProcessingUnit(IScheduler scheduler, TaskManagementListener memoryCallBack) {
 		this.scheduler =scheduler;
-		failedTasks = new ArrayList<IRunnableTask>();
-		finnishedTasks = new ArrayList<IRunnableTask>();
+		failedSubTasks = new ArrayList<SubTaskId>();
+		finnishedSubTasks = new ArrayList<SubTaskId>();
+		this.memoryCallBack = memoryCallBack;
 	}
 
-	public void addTask(IRunnableTask task) {
-		scheduler.addToQueue(task);
+	public void addTask(SubTaskId subTaskId) {
+		memoryCallBack.onSubTaskAdded(subTaskId);
+		scheduler.addToQueue(subTaskId);
 		scheduleTasks();
 	}
 
 	@Override
-	public void onTaskFinished(ProcessingCore c, IRunnableTask t) {
-		finnishedTasks.add(t);
+	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+		memoryCallBack.onSubTaskAdded(subTaskId);
+		finnishedSubTasks.add(subTaskId);
 		scheduleTasks();
 	}
 
-	public List<IRunnableTask> getFinnishedTasks() {
-		return finnishedTasks;
+	public List<SubTaskId> getFinnishedSubTasks() {
+		return finnishedSubTasks;
 	}
 
-	public List<IRunnableTask> getFailedTasks() {
-		return failedTasks;
+	public List<SubTaskId> getFailedSubTasks() {
+		return failedSubTasks;
 	}
 
 	/* ********************************************************************************** PRIVATES */
@@ -56,8 +64,8 @@ public class ProcessingUnit  implements ProcessingCore.ProcessingUnitListener {
 			try {
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
-				dest.getTask().fail(e);
-				failedTasks.add(dest.getTask());
+				Platform.getInstance().getSubTask(dest.getSubTaskId()).fail(e);
+				failedSubTasks.add(dest.getSubTaskId());
 			}
 		}
 	}
@@ -65,7 +73,7 @@ public class ProcessingUnit  implements ProcessingCore.ProcessingUnitListener {
 	private void addTaskToDestination(CoreDestination dest) throws TooMuchConcurrentTasksException {
 		for(ProcessingCore core: cores) {
 			if(core.getId().equals(dest.getCoreId())) {
-				core.addTask(dest.getTask());
+				core.addTask(dest.getSubTaskId());
 			}
 		}
 	}

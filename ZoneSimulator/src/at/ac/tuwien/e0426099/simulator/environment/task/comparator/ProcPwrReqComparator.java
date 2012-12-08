@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
 
-import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.task.ISubTask;
 
 import java.util.Comparator;
 
@@ -8,10 +8,10 @@ import java.util.Comparator;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcPwrReqComparator implements Comparator<IRunnableTask> {
+public class ProcPwrReqComparator implements Comparator<ISubTask> {
 
 	@Override
-	public int compare(IRunnableTask o1, IRunnableTask o2) {
+	public int compare(ISubTask o1, ISubTask o2) {
 		return o1.getProcessingRequirements().getMaxComputationalUtilization().compareTo(o2.getProcessingRequirements().getMaxComputationalUtilization());
 	}
 }

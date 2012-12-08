@@ -2,7 +2,7 @@ package at.ac.tuwien.e0426099.simulator.environment.processor.scheduler;
 
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcessingInfoLoadComparator;
 
 import java.util.Collections;
@@ -16,15 +16,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class FifoLeastLoadScheduler implements IScheduler{
 
-	private Queue<IRunnableTask> taskQueue;
+	private Queue<SubTaskId> taskQueue;
 
 	public FifoLeastLoadScheduler() {
-		taskQueue=new ConcurrentLinkedQueue<IRunnableTask>();
+		taskQueue=new ConcurrentLinkedQueue<SubTaskId>();
 	}
 
 	@Override
-	public void addToQueue(IRunnableTask task) {
-		taskQueue.offer(task);
+	public void addToQueue(SubTaskId subTaskId) {
+		taskQueue.offer(subTaskId);
 	}
 
 	@Override

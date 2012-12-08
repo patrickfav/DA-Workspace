@@ -1,28 +1,29 @@
 package at.ac.tuwien.e0426099.simulator.environment.memory.entities;
 
-import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 /**
  * @author PatrickF
  * @since 07.12.12
  */
 public class TaskInMemory {
-	private IRunnableTask task;
+	private SubTaskId subTaskId;
 	private MemoryAmount amountAssignedToMemory;
 	private MemoryAmount amountNotAssignable;
 
-	public TaskInMemory(IRunnableTask task, MemoryAmount amountAssignedToMemory, MemoryAmount amountNotAssignable) {
-		this.task = task;
+	public TaskInMemory(SubTaskId subTaskId, MemoryAmount amountAssignedToMemory, MemoryAmount amountNotAssignable) {
+		this.subTaskId = subTaskId;
 		this.amountAssignedToMemory = amountAssignedToMemory;
 		this.amountNotAssignable = amountNotAssignable;
 	}
 
-	public IRunnableTask getTask() {
-		return task;
+	public SubTaskId getSubTaskId() {
+		return subTaskId;
 	}
 
-	public void setTask(IRunnableTask task) {
-		this.task = task;
+	public void setSubTaskId(SubTaskId subTaskId) {
+		this.subTaskId = subTaskId;
 	}
 
 	public MemoryAmount getAmountAssignedToMemory() {
@@ -47,6 +48,6 @@ public class TaskInMemory {
 	 * @return [0.0,1.0]
 	 */
 	public double getRatioNotAssigned() {
-		return (double) amountNotAssignable.getAmountInKiloByte() / (double) task.getMemoryDemand().getAmountInKiloByte();
+		return (double) amountNotAssignable.getAmountInKiloByte() / (double) Platform.getInstance().getSubTask(subTaskId).getMemoryDemand().getAmountInKiloByte();
 	}
 }

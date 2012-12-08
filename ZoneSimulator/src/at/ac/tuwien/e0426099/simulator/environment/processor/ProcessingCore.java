@@ -1,19 +1,25 @@
 package at.ac.tuwien.e0426099.simulator.environment.processor;
 
-import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import at.ac.tuwien.e0426099.simulator.environment.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
-import at.ac.tuwien.e0426099.simulator.environment.task.IRunnableTask;
+import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqIdComparator;
+import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
-import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqComparator;
+import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingCore implements ITaskListener{
+public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemoryListener {
 
 	private UUID id;
 	private RawProcessingPower rawProcessingPower;
@@ -21,7 +27,7 @@ public class ProcessingCore implements ITaskListener{
 	private double concurrentTaskPenaltyPercentage;
 	private ProcessingUnitListener processingUnit;
 
-	private List<IRunnableTask> currentRunningTasks;
+	private List<SubTaskId> currentRunningTasks;
 
 
 	public ProcessingCore(RawProcessingPower rawProcessingPower, int maxConcurrentTasks, double concurrentTaskPenaltyPercentage, ProcessingUnitListener processingUnit) {
@@ -30,20 +36,20 @@ public class ProcessingCore implements ITaskListener{
 		this.concurrentTaskPenaltyPercentage = concurrentTaskPenaltyPercentage;
 		this.processingUnit=processingUnit;
 
-		currentRunningTasks=new ArrayList<IRunnableTask>();
+		currentRunningTasks=new ArrayList<SubTaskId>();
 		id=UUID.randomUUID();
 	}
 
-	public synchronized void addTask(IRunnableTask task) throws TooMuchConcurrentTasksException {
-		task.setTaskListener(this);//set listener for callback
+	public synchronized void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
+		Platform.getInstance().getSubTask(subTaskId).setTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
-			throw new TooMuchConcurrentTasksException("Cannot add this task "+task.getReadAbleName()+
+			throw new TooMuchConcurrentTasksException("Cannot add this task "+Platform.getInstance().getSubTask(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
 			pauseAllRunningTasks();
 
-			currentRunningTasks.add(task); //add new task
+			currentRunningTasks.add(subTaskId); //add new task
 
 			reBalanceTasks();
 
@@ -56,16 +62,16 @@ public class ProcessingCore implements ITaskListener{
 	}
 
 	@Override
-	public synchronized void onTaskFinished(IRunnableTask task) {
+	public synchronized void onTaskFinished(SubTaskId subTaskId) {
 		pauseAllRunningTasks();
 
-		currentRunningTasks.remove(task); //removed finished task
+		currentRunningTasks.remove(subTaskId); //removed finished task
 
 		reBalanceTasks();
 
 		runAllTasks();
 
-		processingUnit.onTaskFinished(this,task); //inform processing unit
+		processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
 	}
 
 	public int getMaxConcurrentTasks() {
@@ -82,8 +88,8 @@ public class ProcessingCore implements ITaskListener{
 	 */
 	public synchronized double getLoad() {
 		long sum = 0;
-		for(IRunnableTask t: currentRunningTasks) {
-			sum += t.getCurrentlyAssignedProcessingPower();
+		for(SubTaskId t: currentRunningTasks) {
+			sum += Platform.getInstance().getSubTask(t).getCurrentlyAssignedProcessingPower();
 		}
 		return rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)) / (double) sum;
 	}
@@ -99,38 +105,51 @@ public class ProcessingCore implements ITaskListener{
 	/* ********************************************************************************** PRIVATES */
 
 	private void reBalanceTasks() {
-		Collections.sort(currentRunningTasks, new ProcPwrReqComparator()); //sort lower demanding task first
+		Collections.sort(currentRunningTasks, new ProcPwrReqIdComparator()); //sort lower demanding task first
 
 		double currentProcPwrP = rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)); //pwr - penality for concurrent processing
 		double maxProcPwrPerTask =  currentProcPwrP/currentRunningTasks.size(); //fairly shared resources
 
 		for(int i=0; i<currentRunningTasks.size(); i++) {
-			if(currentRunningTasks.get(i).getProcessingRequirements().getMaxComputationalUtilization() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
-				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) currentRunningTasks.get(i).getProcessingRequirements().getMaxComputationalUtilization();
-				currentRunningTasks.get(i).updateProcessingResources(currentRunningTasks.get(i).getProcessingRequirements().getMaxComputationalUtilization());
-				maxProcPwrPerTask += procPwrThatCanBeSharedAgain/(i+1 - currentRunningTasks.size()); //divide upon remaining tasks
+			if(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
+				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization();
+				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateResources(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
+				maxProcPwrPerTask += procPwrThatCanBeSharedAgain/(currentRunningTasks.size()-i+1); //divide upon remaining tasks
 			} else {
-				currentRunningTasks.get(i).updateProcessingResources((long) Math.floor(maxProcPwrPerTask));
+				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateResources((long) Math.floor(maxProcPwrPerTask));
 			}
 		}
 	}
 
 	private void pauseAllRunningTasks() {
-		for(IRunnableTask t: currentRunningTasks) {
-			t.pause();
+		for(SubTaskId t: currentRunningTasks) {
+			Platform.getInstance().getSubTask(t).pause();
 		}
 	}
 
 	private void runAllTasks() {
-		for(IRunnableTask t: currentRunningTasks) {
-			t.run();
+		for(SubTaskId t: currentRunningTasks) {
+			Platform.getInstance().getSubTask(t).pause();
 		}
 	}
 
-	/* ********************************************************************************** INNER CLASSES */
+	@Override
+	public void subTaskHaveAlteredMemoryAssignement(List<SubTaskId> subTaskIds) {
+		boolean needsRebalancing = false;
+		for(SubTaskId idOuter:subTaskIds) {
+			for(SubTaskId idInner:currentRunningTasks) {
+				if(idOuter.equals(idInner)) {
+					needsRebalancing = true;
+					break;
+				}
+			}
 
-	public interface ProcessingUnitListener {
-		public void onTaskFinished(ProcessingCore c,IRunnableTask t);
+			if(needsRebalancing)
+				break;
+		}
+
+		if(needsRebalancing)
+			reBalanceTasks();
+
 	}
-
 }
