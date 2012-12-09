@@ -25,7 +25,7 @@ public class TaskWorkManager {
 
 	public long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) {
 		if(processingSlices.size() > 0) {
-			if(processingSlices.get(processingSlices.size()-1).isStillProcessing()) {
+			if(getRecentSlice().isStillProcessing()) {
 				throw new RuntimeException("Cannot start processing while already in processing");
 			}
 			if(givenProcessingPower.getComputationsPerMs() > processingRequirements.getMaxComputationalUtilization().getComputationsPerMs()) {
@@ -46,4 +46,36 @@ public class TaskWorkManager {
 
 		computationsLeftToDo -= processingSlices.get(processingSlices.size()-1).endProcessing();
 	}
+
+	public long getComputationsLeftToDo() {
+		return computationsLeftToDo;
+	}
+
+	public long getNetTimeSpendOnComputation() {
+		long timeMs = 0;
+		for(ProcessingSlice s:processingSlices) {
+			timeMs += s.getActualTimeSpendOnComputation();
+		}
+		return timeMs;
+	}
+
+	public long getOverallTimeSpendOnComputation() {
+		if(processingSlices.size() <= 0) {
+			return 0;
+		} else if(processingSlices.size() == 1) {
+			return processingSlices.get(0).getActualTimeSpendOnComputation();
+		} else {
+			return getRecentSlice().getEndTime().getTime() - processingSlices.get(0).getStartTime().getTime();
+		}
+	}
+
+	public ProcessingSlice getRecentSlice() {
+		if(processingSlices.size() > 0) {
+			return processingSlices.get(processingSlices.size()-1);
+		}
+
+		return null;
+	}
+
+	/* ***************************************************************************** PRIVATES */
 }

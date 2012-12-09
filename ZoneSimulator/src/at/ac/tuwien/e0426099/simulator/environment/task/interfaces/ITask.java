@@ -1,4 +1,4 @@
-package at.ac.tuwien.e0426099.simulator.environment.task;
+package at.ac.tuwien.e0426099.simulator.environment.task.interfaces;
 
 import java.util.UUID;
 
@@ -8,7 +8,7 @@ import java.util.UUID;
  */
 public interface ITask {
 
-	public ISubTask getSubTaskById(UUID id);
+	public IComputationalSubTask getSubTaskById(UUID id);
 
 	public UUID getId();
 	public String getReadAbleName();

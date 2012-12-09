@@ -18,6 +18,7 @@ import java.util.List;
 public class WorkingMemory implements TaskManagementListener {
 	private static final boolean SHUFFLING_TASKS_BEFORE_ASSIGNMENT = true;
 
+	private double memoryNotAssignedPenalityMultiplicator; //to configure penality for too low ram
 	private MemoryAmount sizeOfMemory;
 	private List<TaskInMemory> taskInMemoryList;
 	private List<ChangedMemoryListener> memoryListeners;
@@ -65,7 +66,7 @@ public class WorkingMemory implements TaskManagementListener {
 		}
 		tim.markChanged();
 		taskInMemoryList.add(tim);
-		Platform.getInstance().getSubTask(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned());
+		Platform.getInstance().getSubTask(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
 	}
 
 	private synchronized MemoryAmount getUsedMemory() {

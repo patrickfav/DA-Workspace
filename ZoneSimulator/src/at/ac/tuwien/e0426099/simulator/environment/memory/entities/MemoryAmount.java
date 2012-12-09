@@ -37,4 +37,17 @@ public class MemoryAmount {
 		return obj instanceof MemoryAmount && amountInKiloByte == ((MemoryAmount) obj).getAmountInKiloByte();
 	}
 
+	@Override
+	public String toString() {
+		if (amountInKiloByte >= 1000000000) {
+			return String.valueOf(amountInKiloByte/1000000000)+"TB";
+		} else if(amountInKiloByte >= 1000000) {
+			return String.valueOf(amountInKiloByte/1000000)+"GB";
+		} else if(amountInKiloByte >= 1000) {
+			return String.valueOf(amountInKiloByte/1000)+"MB";
+		} else {
+			return String.valueOf(amountInKiloByte)+"kB";
+		}
+	}
+
 }

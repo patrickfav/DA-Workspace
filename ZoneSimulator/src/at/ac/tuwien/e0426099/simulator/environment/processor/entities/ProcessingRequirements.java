@@ -28,4 +28,8 @@ public class ProcessingRequirements {
 	public void setComputationNeedForCompletion(Long computationNeedForCompletion) {
 		this.computationNeedForCompletion = computationNeedForCompletion;
 	}
+
+	public long getMinimumExecutionTimeMs() {
+		return maxComputationalUtilization.getEstimatedTimeInMsToFinish(this);
+	}
 }

@@ -28,7 +28,7 @@ public class ProcessingSlice {
 
 	public long endProcessing() {
 		endTime = new Date();
-		return actualComputationsDone();
+		return getActualComputationsDone();
 	}
 
 	public boolean isStillProcessing() {
@@ -46,11 +46,27 @@ public class ProcessingSlice {
 		return null;
 	}
 
-	public long actualComputationsDone() {
+	public long getActualComputationsDone() {
 		if(!isStillProcessing()) {
-			return givenProcessingPower.getComputationsDone(endTime.getTime() - startTime.getTime());
+			return givenProcessingPower.getComputationsDone(getActualTimeSpendOnComputation());
 		} else {
 			return 0;
 		}
+	}
+
+	public long getActualTimeSpendOnComputation() {
+		if(startTime != null && !isStillProcessing()) {
+			return endTime.getTime() - startTime.getTime();
+		} else {
+			return 0;
+		}
+	}
+
+	public Date getStartTime() {
+		return startTime;
+	}
+
+	public Date getEndTime() {
+		return endTime;
 	}
 }

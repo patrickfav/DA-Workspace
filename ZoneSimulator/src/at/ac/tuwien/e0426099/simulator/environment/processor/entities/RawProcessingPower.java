@@ -44,6 +44,9 @@ public class RawProcessingPower {
 	}
 
 	public long getEstimatedTimeInMsToFinish(long computationsNeeded) {
-		return (long) Math.ceil(computationsNeeded / computationsPerMs);
+		if(computationsPerMs > 0)
+			return (long) Math.ceil(computationsNeeded / computationsPerMs);
+
+		return 0;
 	}
 }

@@ -41,7 +41,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	}
 
 	public synchronized void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
-		Platform.getInstance().getSubTask(subTaskId).setTaskListener(this);//set listener for callback
+		Platform.getInstance().getSubTask(subTaskId).addTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
 			throw new TooMuchConcurrentTasksException("Cannot add this task "+Platform.getInstance().getSubTask(subTaskId).getReadAbleName()+
@@ -89,7 +89,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	public synchronized double getLoad() {
 		long sum = 0;
 		for(SubTaskId t: currentRunningTasks) {
-			sum += Platform.getInstance().getSubTask(t).getCurrentlyAssignedProcessingPower();
+			sum += Platform.getInstance().getSubTask(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
 		}
 		return rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)) / (double) sum;
 	}
@@ -111,12 +111,12 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		double maxProcPwrPerTask =  currentProcPwrP/currentRunningTasks.size(); //fairly shared resources
 
 		for(int i=0; i<currentRunningTasks.size(); i++) {
-			if(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
-				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization();
-				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateResources(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
+			if(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
+				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
+				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateAvailableProcessingPower(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
 				maxProcPwrPerTask += procPwrThatCanBeSharedAgain/(currentRunningTasks.size()-i+1); //divide upon remaining tasks
 			} else {
-				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateResources((long) Math.floor(maxProcPwrPerTask));
+				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
 			}
 		}
 	}
