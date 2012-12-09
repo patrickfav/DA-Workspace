@@ -2,7 +2,9 @@ package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
+import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
+import at.ac.tuwien.e0426099.simulator.environment.task.entities.TaskWorkManager;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 
 import java.util.UUID;
@@ -21,7 +23,7 @@ public class SubTask extends Thread implements ISubTask {
 	private long availableResources;
 	private double processingHandicap;
 	private ProcessingRequirements requirements;
-
+	private TaskWorkManager taskWorkManager;
 
 
 	public SubTask(UUID parentTaskId, String readAbleName, MemoryAmount neededForExecution,Long maxComputationalUtilization, Long msNeededToFinishWithMaxUtilization) {
@@ -32,7 +34,8 @@ public class SubTask extends Thread implements ISubTask {
 		memoryDemand = neededForExecution;
 		availableResources=0;
 		processingHandicap=0;
-		requirements = new ProcessingRequirements(maxComputationalUtilization,msNeededToFinishWithMaxUtilization);
+		requirements = new ProcessingRequirements(new RawProcessingPower(maxComputationalUtilization),msNeededToFinishWithMaxUtilization);
+		taskWorkManager = new TaskWorkManager(requirements);
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class SubTask extends Thread implements ISubTask {
 
 	@Override
 	public void run() {
-		sleep();
+		//sleep();
 	}
 
 	@Override

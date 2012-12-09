@@ -5,27 +5,27 @@ package at.ac.tuwien.e0426099.simulator.environment.processor.entities;
  * @since 07.12.12
  */
 public class ProcessingRequirements {
-	private Long maxComputationalUtilization;
-	private Long msNeededToFinishWithMaxUtilization;
+	private RawProcessingPower maxComputationalUtilization;
+	private Long computationNeedForCompletion;
 
-	public ProcessingRequirements(Long maxComputationalUtilization, Long msNeededToFinishWithMaxUtilization) {
+	public ProcessingRequirements(RawProcessingPower maxComputationalUtilization, Long msNeededToFinishWithMaxUtilization) {
 		this.maxComputationalUtilization = maxComputationalUtilization;
-		this.msNeededToFinishWithMaxUtilization = msNeededToFinishWithMaxUtilization;
+		this.computationNeedForCompletion = msNeededToFinishWithMaxUtilization;
 	}
 
-	public Long getMaxComputationalUtilization() {
+	public RawProcessingPower getMaxComputationalUtilization() {
 		return maxComputationalUtilization;
 	}
 
-	public void setMaxComputationalUtilization(Long maxComputationalUtilization) {
+	public void setMaxComputationalUtilization(RawProcessingPower maxComputationalUtilization) {
 		this.maxComputationalUtilization = maxComputationalUtilization;
 	}
 
-	public Long getMsNeededToFinishWithMaxUtilization() {
-		return msNeededToFinishWithMaxUtilization;
+	public Long getComputationNeedForCompletion() {
+		return computationNeedForCompletion;
 	}
 
-	public void setMsNeededToFinishWithMaxUtilization(Long msNeededToFinishWithMaxUtilization) {
-		this.msNeededToFinishWithMaxUtilization = msNeededToFinishWithMaxUtilization;
+	public void setComputationNeedForCompletion(Long computationNeedForCompletion) {
+		this.computationNeedForCompletion = computationNeedForCompletion;
 	}
 }

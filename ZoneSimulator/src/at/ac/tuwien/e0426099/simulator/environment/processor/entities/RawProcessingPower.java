@@ -7,6 +7,10 @@ package at.ac.tuwien.e0426099.simulator.environment.processor.entities;
 public class RawProcessingPower {
 	private long computationsPerMs;
 
+	public RawProcessingPower(long computationsPerMs) {
+		this.computationsPerMs = computationsPerMs;
+	}
+
 	public long getComputationsPerMs() {
 		return computationsPerMs;
 	}
@@ -28,5 +32,18 @@ public class RawProcessingPower {
 		} else {
 			return Math.floor(((double) computationsPerMs)*penalty);
 		}
+	}
+
+	public long getComputationsDone(long timeInMs) {
+		return computationsPerMs * timeInMs;
+	}
+
+	public long getEstimatedTimeInMsToFinish(ProcessingRequirements requirements) {
+		long computationsPerMs = Math.min(requirements.getMaxComputationalUtilization().getComputationsPerMs(),this.computationsPerMs);
+		return (long) Math.ceil(requirements.getComputationNeedForCompletion() / computationsPerMs);
+	}
+
+	public long getEstimatedTimeInMsToFinish(long computationsNeeded) {
+		return (long) Math.ceil(computationsNeeded / computationsPerMs);
 	}
 }

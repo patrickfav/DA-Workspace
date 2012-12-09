@@ -31,7 +31,7 @@ public class FifoLeastLoadScheduler implements IScheduler{
 	public CoreDestination getNext(List<ProcessingCoreInfo> coreInfos) {
 		if(coreInfos != null && coreInfos.size() > 0) {
 			Collections.sort(coreInfos,new ProcessingInfoLoadComparator());
-			return new CoreDestination(coreInfos.get(0).getId(),taskQueue.peek());
+			return new CoreDestination(coreInfos.get(0).getId(),taskQueue.poll());
 		}
 		return null;
 	}
