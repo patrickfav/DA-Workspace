@@ -3,7 +3,6 @@ package at.ac.tuwien.e0426099.simulator.environment;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
-import at.ac.tuwien.e0426099.simulator.environment.task.thread.ExecutionRunnable;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,8 +55,7 @@ public class Platform {
 		}
 	}
 
-	public ExecutionRunnable getFormThreadPool() {
-		//return threadPool.execute(new ExecutionRunnable());
-		return null;
+	public synchronized ExecutorService getThreadPool() {
+		return threadPool;
 	}
 }

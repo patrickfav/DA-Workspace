@@ -58,9 +58,7 @@ public class TestSubTask {
 
 	@Test
 	public void testSubTaskStartPauseRestartShouldFinish() {
-		subTask1.run();
 		subTask2.run();
-		subTask3.run();
 
 		waitInTest(500);
 
@@ -69,6 +67,25 @@ public class TestSubTask {
 		waitInTest(500);
 
 		subTask2.run();
+	}
+
+	@Test
+	public void testSubTaskStartAndSimulatedFail() {
+		subTask2.run();
+
+		waitInTest(200);
+
+		subTask2.pause();
+
+		waitInTest(100);
+
+		subTask2.run();
+
+		waitInTest(100);
+
+		subTask2.fail(new NullPointerException());
+
+		waitInTest(100);
 	}
 
 	private void waitInTest(long ms) {

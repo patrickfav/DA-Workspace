@@ -1,11 +1,13 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
+import at.ac.tuwien.e0426099.simulator.environment.Platform;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.TaskWorkManager;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
+import at.ac.tuwien.e0426099.simulator.environment.task.listener.ExecutionCallback;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.thread.ExecutionRunnable;
 import org.apache.log4j.LogManager;
@@ -15,12 +17,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * @author PatrickF
  * @since 08.12.12
  */
-public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunnable.ExecutionCallback {
+public class ComputationalSubTask implements IComputationalSubTask,ExecutionCallback {
 	private Logger log = LogManager.getLogger(ComputationalSubTask.class.getName());
 
 	private SubTaskId id;
@@ -34,7 +38,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunn
 	private ProcessingRequirements requirements;
 	private TaskWorkManager taskWorkManager;
 	private Exception exception;
-	private Thread executionThread;
+	private Future futureRefForThread;
 
 	public ComputationalSubTask(UUID parentTaskId, String readAbleName, MemoryAmount neededForExecution, Long maxComputationalUtilization, Long computationsNeededForFinishing) {
 		id = new SubTaskId(parentTaskId,UUID.randomUUID());
@@ -74,11 +78,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunn
 	@Override
 	public void run() {
 		if(status == TaskStatus.NOT_STARTED || status == TaskStatus.PAUSED) {
-			long timeToSleep=taskWorkManager.startProcessing(new Date(),availableProcPower);
-			logMsgInfo("Start task. Estimated time to finish: " + timeToSleep+"ms");
-			setStatus(TaskStatus.RUNNING);
-			executionThread = new Thread(new ExecutionRunnable(timeToSleep,this));
-			executionThread.start();
+			futureRefForThread = Platform.getInstance().getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
 			throw new RuntimeException("Can only start running when in pause or not started");
 		}
@@ -86,8 +86,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunn
 
 	@Override
 	public void fail(Exception e) {
-		logMsgInfo("Task failed");
-		setStatus(TaskStatus.ERROR);
+		logMsgInfo("Task failed. ["+e.getClass().getSimpleName()+"]");
+		setStatus(TaskStatus.SIMULATED_ERROR);
 		exception=e;
 		interruptExecThread();
 	}
@@ -143,9 +143,11 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunn
 	}
 
 	public void waitForThreadToFinish() {
-		if(executionThread != null) {
+		if(futureRefForThread != null) {
 			try {
-				executionThread.join();
+				futureRefForThread.get();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -153,6 +155,13 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunn
 	}
 
 	/* ***************************************************************************** CALLBACKS FROM THREAD */
+
+	@Override
+	public void onExecRun() {
+		long timeToSleep=taskWorkManager.startProcessing(new Date(),availableProcPower);
+		setStatus(TaskStatus.RUNNING);
+		logMsgInfo("Start task. Estimated time to finish: " + timeToSleep+"ms");
+	}
 
 	@Override
 	public void onExecFinished() {
@@ -169,24 +178,27 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionRunn
 	@Override
 	public void onExecInterrupted() {
 		taskWorkManager.stopCurrentProcessing();
-		logMsgDebug("interrupted");
 		if(status == TaskStatus.PAUSED) {
 			logMsgInfo("Task paused. Time spent since last start: "+((taskWorkManager.getRecentSlice() != null) ? taskWorkManager.getRecentSlice().getActualTimeSpendOnComputation(): "null ")+"ms");
+		} else if(status == TaskStatus.RUNNING) {
+			logMsgWarn("Task interrupted but not from our Framework, that's strange...");
 		}
 	}
 
 	@Override
 	public void onExecException(Exception e) {
 		taskWorkManager.stopCurrentProcessing();
-		setStatus(TaskStatus.ERROR);
+		setStatus(TaskStatus.CONCURRENT_ERROR);
+		exception=e;
 		log.error(e);
 	}
 	/* ***************************************************************************** PRIVATES */
 
 	private void interruptExecThread() {
-		if(executionThread != null) {
-			executionThread.interrupt();
+		if(futureRefForThread != null) {
+			futureRefForThread.cancel(true);
 		}
+		futureRefForThread =null; //can only interrupt once
 	}
 
 	private synchronized void setStatus(TaskStatus t) {
