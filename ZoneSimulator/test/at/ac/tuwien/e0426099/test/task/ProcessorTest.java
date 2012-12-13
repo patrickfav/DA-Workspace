@@ -33,26 +33,16 @@ public class ProcessorTest {
 	public void setUp() {
 		subTask1 = new ComputationalSubTask("TestSubTask1",new MemoryAmount(10),10l,30000l);
 		subTask2 = new ComputationalSubTask("TestSubTask2",new MemoryAmount(15),15l,40000l);
-		subTask3 = new ComputationalSubTask("TestSubTask3",new MemoryAmount(15),10l,5000l);
+		subTask3 = new ComputationalSubTask("TestSubTask3",new MemoryAmount(15),10l,10000l);
 
-		subTask1.updateAvailableProcessingPower(new RawProcessingPower(10l));
-		subTask2.updateAvailableProcessingPower(new RawProcessingPower(20l));
-		subTask3.updateAvailableProcessingPower(new RawProcessingPower(10l));
-
-		taskList.add(subTask1);
-		taskList.add(subTask2);
-		taskList.add(subTask3);
 	}
 
 	@After
 	public void tearDown() {
-		//wait for threads to finish
-		for(ComputationalSubTask t:taskList) {
-			try {
-				t.waitForThreadToFinish();
-			} catch (Exception e) {
-
-			}
+		try {
+			Thread.sleep(20 * 1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 		log.info("========================================================");
 	}
@@ -60,8 +50,6 @@ public class ProcessorTest {
 
 	@Test
 	public void testSubTaskStartShouldFinish() {
-
-
 		WorkingMemory memory = new WorkingMemory(new MemoryAmount(4 * 100 * 1000),0.5);
 		ProcessingCore core1 = new ProcessingCore(new RawProcessingPower(1000),5,0.05);
 		ProcessingCore core2 = new ProcessingCore(new RawProcessingPower(1500),5,0.07);
@@ -72,17 +60,17 @@ public class ProcessorTest {
 
 		ProcessingUnit unit = new ProcessingUnit(new FifoLeastLoadScheduler(),memory,cores,Platform.instance());
 
-		Platform.instance().setUp(unit);
+		Platform.instance().setUp("Local",unit);
 
 		ITask task1 = new Task("Task 1");
 
 		task1.addSubTask(subTask1);
-		//task1.addSubTask(subTask2);
+		task1.addSubTask(subTask3);
 
-		//ITask task2 = new Task("Task 2");
-		//task2.addSubTask(subTask3);
+		ITask task2 = new Task("Task 2");
+		task2.addSubTask(subTask2);
 
 		Platform.instance().addTask(task1);
-		//Platform.instance().addTask(task2);
+		Platform.instance().addTask(task2);
 	}
 }

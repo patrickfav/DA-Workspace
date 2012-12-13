@@ -25,4 +25,6 @@ public interface ISubTask {
 	public TaskType getTaskType();
 
 	public void addTaskListener(ITaskListener listener);
+
+	public void waitForTaskToFinish();
 }

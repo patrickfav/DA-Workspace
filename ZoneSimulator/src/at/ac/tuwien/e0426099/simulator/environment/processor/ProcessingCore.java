@@ -7,6 +7,7 @@ import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcess
 import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqIdComparator;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
+import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 
@@ -26,6 +27,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	private int maxConcurrentTasks;
 	private double concurrentTaskPenaltyPercentage;
 	private ProcessingUnitListener processingUnit;
+	private String coreName;
 
 	private List<SubTaskId> currentRunningTasks;
 
@@ -34,7 +36,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		this.rawProcessingPower = rawProcessingPower;
 		this.maxConcurrentTasks = maxConcurrentTasks;
 		this.concurrentTaskPenaltyPercentage = concurrentTaskPenaltyPercentage;
-
+		coreName ="Unassigned Core";
 		currentRunningTasks=new ArrayList<SubTaskId>();
 		id=UUID.randomUUID();
 	}
@@ -94,10 +96,10 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	}
 
 	public synchronized ProcessingCoreInfo getInfo() {
-		return new ProcessingCoreInfo(id,getLoad(),getCurrentRunningTasksSize(),maxConcurrentTasks);
+		return new ProcessingCoreInfo(id, coreName,getLoad(),getCurrentRunningTasksSize(),maxConcurrentTasks);
 	}
 
-	public UUID getId() {
+	public UUID getCoreId() {
 		return id;
 	}
 
@@ -122,7 +124,8 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 
 	private void pauseAllRunningTasks() {
 		for(SubTaskId t: currentRunningTasks) {
-			Platform.instance().getSubTaskForProcessor(t).pause();
+			if(Platform.instance().getSubTaskForProcessor(t).getStatus() == ISubTask.SubTaskStatus.RUNNING)
+				Platform.instance().getSubTaskForProcessor(t).pause();
 		}
 	}
 
@@ -154,5 +157,18 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 
 	public void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
 		this.processingUnit = processingUnit;
+	}
+
+	public String getCoreName() {
+		return coreName;
+	}
+
+	public void setCoreName(String coreName) {
+		this.coreName = coreName;
+	}
+
+	@Override
+	public String toString() {
+		return coreName;
 	}
 }

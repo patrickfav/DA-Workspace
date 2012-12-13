@@ -71,7 +71,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public void pause() {
+	public synchronized void pause() {
 		if(status == SubTaskStatus.RUNNING) {
 			setStatus(SubTaskStatus.PAUSED);
 			interruptExecThread();
@@ -81,7 +81,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public void run() {
+	public synchronized void run() {
 		if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
 			futureRefForThread = Platform.instance().getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
@@ -90,7 +90,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public void fail(Exception e) {
+	public synchronized void fail(Exception e) {
 		logMsgInfo("Task failed. ["+e.getClass().getSimpleName()+"]");
 		setStatus(SubTaskStatus.SIMULATED_ERROR);
 		exception=e;
@@ -147,7 +147,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		return getFullReadableID();
 	}
 
-	public void waitForThreadToFinish() {
+	@Override
+	public void waitForTaskToFinish() {
 		if(futureRefForThread != null) {
 			try {
 				futureRefForThread.get();
@@ -195,7 +196,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		taskWorkManager.stopCurrentProcessing();
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
-		log.error(e);
+		log.error(getFullReadableID()+": "+"Exception thrown while executing Thread",e);
 	}
 	/* ***************************************************************************** PRIVATES */
 

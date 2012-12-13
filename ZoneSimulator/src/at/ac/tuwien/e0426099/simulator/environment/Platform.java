@@ -80,6 +80,7 @@ public class Platform implements ProcessingUnitListener {
 
 	public void setUp(String platformName, ProcessingUnit unit) {
 		processingUnit = unit;
+		//processingUnit.start();
 		this.platformName = platformName;
 		setUp =true;
 
@@ -92,8 +93,8 @@ public class Platform implements ProcessingUnitListener {
 	}
 
 	private boolean dispatcher(ITask task) {
-		log.debug(this+" Start dispatcher with Task "+task);
 		if(task.subTasksLeftToDo()) {
+			log.debug(this+" Start dispatcher with Task "+task);
 			ISubTask subTask = task.getNextSubTask();
 
 			if(subTask.getTaskType() == ISubTask.TaskType.PROCESSING) {
@@ -108,13 +109,19 @@ public class Platform implements ProcessingUnitListener {
 				return true;
 			}
 		}
-		log.debug(this+" No more subtasks to dispatch.");
+		log.debug(this+" No more subtasks to dispatch in task.");
 		return false;
 	}
 
 	@Override
 	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		dispatcher(taskMap.get(subTaskId.getParentTaskId()));
+		if(!dispatcher(taskMap.get(subTaskId.getParentTaskId()))) {
+			log.debug(this+" Waiting for tasks to finish...");
+			for(ITask task:taskMap.values()) {
+				task.blockWaitUntilFinished();
+			}
+			log.debug(this+" All done.");
+		}
 	}
 
 	@Override

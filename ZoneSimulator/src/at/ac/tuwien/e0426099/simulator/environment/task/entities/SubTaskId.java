@@ -42,4 +42,12 @@ public class SubTaskId {
 	public boolean equals(Object obj) {
 		return obj instanceof SubTaskId && ((SubTaskId) obj).getParentTaskId().equals(parentTaskId) && ((SubTaskId) obj).getSubTaskId().equals(subTaskId); //yea bitch, thats some one line code!
 	}
+
+	@Override
+	public String toString() {
+		return "SubTaskId{" +
+				"parentTaskId=" + parentTaskId.toString().substring(0,5) +
+				"..., subTaskId=" + subTaskId.toString().substring(0,5) +
+				"...}";
+	}
 }

@@ -23,7 +23,7 @@ public class TaskWorkManager {
 		computationsLeftToDo = processingRequirements.getComputationNeedForCompletion();
 	}
 
-	public long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) {
+	public synchronized long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) {
 		if(processingSlices.size() > 0) {
 			if(getRecentSlice().isStillProcessing()) {
 				throw new RuntimeException("Cannot start processing while already in processing");
@@ -39,7 +39,7 @@ public class TaskWorkManager {
 		return slice.getEstimatedTimeInMsForFinish();
 	}
 
-	public void stopCurrentProcessing() {
+	public synchronized void stopCurrentProcessing() {
 		if(processingSlices.size() < 0) {
 			throw new RuntimeException("No slice available to stop");
 		}
@@ -47,11 +47,11 @@ public class TaskWorkManager {
 		computationsLeftToDo -= processingSlices.get(processingSlices.size()-1).endProcessing();
 	}
 
-	public long getComputationsLeftToDo() {
+	public synchronized long getComputationsLeftToDo() {
 		return computationsLeftToDo;
 	}
 
-	public long getNetTimeSpendOnComputation() {
+	public synchronized long getNetTimeSpendOnComputation() {
 		long timeMs = 0;
 		for(ProcessingSlice s:processingSlices) {
 			timeMs += s.getActualTimeSpendOnComputation();
@@ -59,7 +59,7 @@ public class TaskWorkManager {
 		return timeMs;
 	}
 
-	public long getOverallTimeSpendOnComputation() {
+	public synchronized long getOverallTimeSpendOnComputation() {
 		if(processingSlices.size() <= 0) {
 			return 0;
 		} else if(processingSlices.size() == 1) {
@@ -69,7 +69,7 @@ public class TaskWorkManager {
 		}
 	}
 
-	public ProcessingSlice getRecentSlice() {
+	public synchronized ProcessingSlice getRecentSlice() {
 		if(processingSlices.size() > 0) {
 			return processingSlices.get(processingSlices.size()-1);
 		}

@@ -4,37 +4,43 @@ import java.util.Date;
 import java.util.UUID;
 
 public class ProcessingCoreInfo {
-		private UUID id;
-		private double load;
-		private int currentRunningTasks;
-		private int maxConcurrentTasks;
-		private long createdTimestamp;
+	private UUID id;
+	private String name;
+	private double load;
+	private int currentRunningTasks;
+	private int maxConcurrentTasks;
+	private long createdTimestamp;
 
-		public ProcessingCoreInfo(UUID id, double load, int currentRunningTasks, int maxConcurrentTasks) {
-			this.id = id;
-			this.load = load;
-			this.currentRunningTasks = currentRunningTasks;
-			this.maxConcurrentTasks = maxConcurrentTasks;
-			createdTimestamp = new Date().getTime();
-		}
+	public ProcessingCoreInfo(UUID id, String name, double load, int currentRunningTasks, int maxConcurrentTasks) {
+		this.id = id;
+		this.name = name;
+		this.load = load;
+		this.currentRunningTasks = currentRunningTasks;
+		this.maxConcurrentTasks = maxConcurrentTasks;
+		createdTimestamp = new Date().getTime();
+	}
 
-		public Double getLoad() {
-			return load;
-		}
+	public Double getLoad() {
+		return load;
+	}
 
-		public int getCurrentRunningTasks() {
-			return currentRunningTasks;
-		}
+	public int getCurrentRunningTasks() {
+		return currentRunningTasks;
+	}
 
-		public int getMaxConcurrentTasks() {
-			return maxConcurrentTasks;
-		}
+	public int getMaxConcurrentTasks() {
+		return maxConcurrentTasks;
+	}
 
-		public UUID getId() {
-			return id;
-		}
+	public UUID getId() {
+		return id;
+	}
 
-		public long getCreatedTimestamp() {
-			return createdTimestamp;
-		}
+	public long getCreatedTimestamp() {
+		return createdTimestamp;
+	}
+
+	public String getName() {
+		return name;
+	}
 }

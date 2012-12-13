@@ -2,6 +2,8 @@ package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -10,6 +12,7 @@ import java.util.*;
  * @since 13.12.12
  */
 public class Task implements ITask{
+	private Logger log = LogManager.getLogger(Task.class.getName());
 
 	private UUID id;
 	private String readAbleName;
@@ -50,6 +53,7 @@ public class Task implements ITask{
 	}
 	@Override
 	public boolean subTasksLeftToDo() {
+		log.debug(readAbleName+": "+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
 		return subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size();
 	}
 
@@ -68,7 +72,7 @@ public class Task implements ITask{
 
 	@Override
 	public UUID getId() {
-		return id;  //To change body of implemented methods use File | Settings | File Templates.
+		return id;
 	}
 
 	@Override
@@ -77,11 +81,23 @@ public class Task implements ITask{
 	}
 
 	@Override
+	public void blockWaitUntilFinished() {
+		for (UUID id : subTaskOrder) {
+			if(subTasks.get(id).getStatus() == ISubTask.SubTaskStatus.RUNNING) {
+				try {
+					subTasks.get(id).waitForTaskToFinish();
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	@Override
 	public String toString() {
-		return "Task{" +
-				"name=" + readAbleName +
-				", id='" + id + '\'' +
-				", status=" + status +
+		return  readAbleName+"{" +
+				"id='" + id.toString().substring(0,5) + '\'' +
+				"..., status=" + status +
 				'}';
 	}
 }

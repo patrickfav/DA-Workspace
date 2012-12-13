@@ -42,7 +42,7 @@ public class TestSubTask {
 	public void tearDown() {
 		//wait for threads to finish
 		for(ComputationalSubTask t:taskList) {
-			t.waitForThreadToFinish();
+			t.waitForTaskToFinish();
 		}
 		log.info("========================================================");
 	}

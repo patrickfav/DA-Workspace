@@ -20,5 +20,6 @@ public interface ITask {
 	public boolean subTasksLeftToDo();
 	public TaskStatus getTaskStatus();
 
+	public void blockWaitUntilFinished();
 
 }

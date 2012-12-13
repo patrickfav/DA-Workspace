@@ -8,6 +8,8 @@ import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManage
 import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
  * @since 07.12.12
  */
 public class ProcessingUnit implements ProcessingUnitListener {
+	private Logger log = LogManager.getLogger(ProcessingUnit.class.getName());
 
 	private List<ProcessingCore> cores;
 	private IScheduler scheduler;
@@ -35,12 +38,15 @@ public class ProcessingUnit implements ProcessingUnitListener {
 		this.cores=cores;
 		this.platformCallBack = platformCallBack;
 
-		for(ProcessingCore c :cores) {
-			c.setProcessingUnitListener(this);
+		for(int i=0;i<cores.size();i++) {
+			cores.get(i).setProcessingUnitListener(this);
+			cores.get(i).setCoreName("Core " + String.valueOf(i));
+			//cores.get(i).start();
 		}
 	}
 
 	public void addTask(SubTaskId subTaskId) {
+		log.debug("adding subtask to cpu "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		scheduler.addToQueue(subTaskId);
 		scheduleTasks();
@@ -48,6 +54,7 @@ public class ProcessingUnit implements ProcessingUnitListener {
 
 	@Override
 	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+		log.debug("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		finnishedSubTasks.add(subTaskId);
 		scheduleTasks();
@@ -65,6 +72,7 @@ public class ProcessingUnit implements ProcessingUnitListener {
 	/* ********************************************************************************** PRIVATES */
 
 	private void scheduleTasks() {
+		log.debug("scheduling tasks between cores");
 		CoreDestination dest;
 		List<ProcessingCoreInfo> coreInfos = getAllInfos();
 
@@ -80,7 +88,7 @@ public class ProcessingUnit implements ProcessingUnitListener {
 
 	private void addTaskToDestination(CoreDestination dest) throws TooMuchConcurrentTasksException {
 		for(ProcessingCore core: cores) {
-			if(core.getId().equals(dest.getCoreId())) {
+			if(core.getCoreId().equals(dest.getCoreId())) {
 				core.addTask(dest.getSubTaskId());
 			}
 		}
