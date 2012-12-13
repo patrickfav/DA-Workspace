@@ -2,8 +2,8 @@ package at.ac.tuwien.e0426099.simulator.environment.processor.scheduler;
 
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcessingInfoLoadComparator;
+import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +29,7 @@ public class FifoLeastLoadScheduler implements IScheduler{
 
 	@Override
 	public CoreDestination getNext(List<ProcessingCoreInfo> coreInfos) {
-		if(coreInfos != null && coreInfos.size() > 0) {
+		if(coreInfos != null && coreInfos.size() > 0 && !taskQueue.isEmpty()) {
 			Collections.sort(coreInfos,new ProcessingInfoLoadComparator());
 			return new CoreDestination(coreInfos.get(0).getId(),taskQueue.poll());
 		}

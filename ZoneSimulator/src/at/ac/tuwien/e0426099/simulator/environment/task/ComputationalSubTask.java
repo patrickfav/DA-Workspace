@@ -29,7 +29,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	private SubTaskId id;
 	private String readAbleName;
-	private TaskStatus status;
+	private SubTaskStatus status;
 	private TaskType type;
 	private MemoryAmount memoryDemand;
 	private List<ITaskListener> listeners;
@@ -40,10 +40,10 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	private Exception exception;
 	private Future futureRefForThread;
 
-	public ComputationalSubTask(UUID parentTaskId, String readAbleName, MemoryAmount neededForExecution, Long maxComputationalUtilization, Long computationsNeededForFinishing) {
-		id = new SubTaskId(parentTaskId,UUID.randomUUID());
+	public ComputationalSubTask(String readAbleName, MemoryAmount neededForExecution, Long maxComputationalUtilization, Long computationsNeededForFinishing) {
+		id = new SubTaskId();
 		this.readAbleName = readAbleName;
-		setStatus(TaskStatus.NOT_STARTED);
+		setStatus(SubTaskStatus.NOT_STARTED);
 		type = TaskType.PROCESSING;
 		memoryDemand = neededForExecution;
 		availableProcPower =new RawProcessingPower(0);
@@ -66,9 +66,14 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
+	public void setParentId(UUID parentTaskId) {
+		id.upadteParentId(parentTaskId);
+	}
+
+	@Override
 	public void pause() {
-		if(status == TaskStatus.RUNNING) {
-			setStatus(TaskStatus.PAUSED);
+		if(status == SubTaskStatus.RUNNING) {
+			setStatus(SubTaskStatus.PAUSED);
 			interruptExecThread();
 		} else {
 			logMsgWarn("Can't pause while not running");
@@ -77,8 +82,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	@Override
 	public void run() {
-		if(status == TaskStatus.NOT_STARTED || status == TaskStatus.PAUSED) {
-			futureRefForThread = Platform.getInstance().getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
+		if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
+			futureRefForThread = Platform.instance().getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
 			throw new RuntimeException("Can only start running when in pause or not started");
 		}
@@ -87,7 +92,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	@Override
 	public void fail(Exception e) {
 		logMsgInfo("Task failed. ["+e.getClass().getSimpleName()+"]");
-		setStatus(TaskStatus.SIMULATED_ERROR);
+		setStatus(SubTaskStatus.SIMULATED_ERROR);
 		exception=e;
 		interruptExecThread();
 	}
@@ -112,7 +117,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public TaskStatus getStatus() {
+	public SubTaskStatus getStatus() {
 		return status;
 	}
 
@@ -159,7 +164,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	@Override
 	public void onExecRun() {
 		long timeToSleep=taskWorkManager.startProcessing(new Date(),availableProcPower);
-		setStatus(TaskStatus.RUNNING);
+		setStatus(SubTaskStatus.RUNNING);
 		logMsgInfo("Start task. Estimated time to finish: " + timeToSleep+"ms");
 	}
 
@@ -170,7 +175,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
 			logMsgInfo("Task Finished. [Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms," +
 					" Overall spent: "+String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms]");
-			setStatus(TaskStatus.FINISHED);
+			setStatus(SubTaskStatus.FINISHED);
 
 			callAllListenerFinished();			}
 	}
@@ -178,9 +183,9 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	@Override
 	public void onExecInterrupted() {
 		taskWorkManager.stopCurrentProcessing();
-		if(status == TaskStatus.PAUSED) {
+		if(status == SubTaskStatus.PAUSED) {
 			logMsgInfo("Task paused. Time spent since last start: "+((taskWorkManager.getRecentSlice() != null) ? taskWorkManager.getRecentSlice().getActualTimeSpendOnComputation(): "null ")+"ms");
-		} else if(status == TaskStatus.RUNNING) {
+		} else if(status == SubTaskStatus.RUNNING) {
 			logMsgWarn("Task interrupted but not from our Framework, that's strange...");
 		}
 	}
@@ -188,7 +193,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	@Override
 	public void onExecException(Exception e) {
 		taskWorkManager.stopCurrentProcessing();
-		setStatus(TaskStatus.CONCURRENT_ERROR);
+		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
 		log.error(e);
 	}
@@ -201,7 +206,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		futureRefForThread =null; //can only interrupt once
 	}
 
-	private synchronized void setStatus(TaskStatus t) {
+	private synchronized void setStatus(SubTaskStatus t) {
 		logMsgDebug("Status: " + t);
 		status = t;
 	}

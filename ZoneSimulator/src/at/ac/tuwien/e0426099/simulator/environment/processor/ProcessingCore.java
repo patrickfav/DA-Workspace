@@ -30,21 +30,20 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	private List<SubTaskId> currentRunningTasks;
 
 
-	public ProcessingCore(RawProcessingPower rawProcessingPower, int maxConcurrentTasks, double concurrentTaskPenaltyPercentage, ProcessingUnitListener processingUnit) {
+	public ProcessingCore(RawProcessingPower rawProcessingPower, int maxConcurrentTasks, double concurrentTaskPenaltyPercentage) {
 		this.rawProcessingPower = rawProcessingPower;
 		this.maxConcurrentTasks = maxConcurrentTasks;
 		this.concurrentTaskPenaltyPercentage = concurrentTaskPenaltyPercentage;
-		this.processingUnit=processingUnit;
 
 		currentRunningTasks=new ArrayList<SubTaskId>();
 		id=UUID.randomUUID();
 	}
 
 	public synchronized void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
-		Platform.getInstance().getSubTask(subTaskId).addTaskListener(this);//set listener for callback
+		Platform.instance().getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
-			throw new TooMuchConcurrentTasksException("Cannot add this task "+Platform.getInstance().getSubTask(subTaskId).getReadAbleName()+
+			throw new TooMuchConcurrentTasksException("Cannot add this task "+Platform.instance().getSubTaskForProcessor(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
 			pauseAllRunningTasks();
@@ -89,7 +88,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	public synchronized double getLoad() {
 		long sum = 0;
 		for(SubTaskId t: currentRunningTasks) {
-			sum += Platform.getInstance().getSubTask(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
+			sum += Platform.instance().getSubTaskForProcessor(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
 		}
 		return rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)) / (double) sum;
 	}
@@ -111,25 +110,25 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		double maxProcPwrPerTask =  currentProcPwrP/currentRunningTasks.size(); //fairly shared resources
 
 		for(int i=0; i<currentRunningTasks.size(); i++) {
-			if(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
-				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
-				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateAvailableProcessingPower(Platform.getInstance().getSubTask(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
+			if(Platform.instance().getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
+				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) Platform.instance().getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
+				Platform.instance().getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(Platform.instance().getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
 				maxProcPwrPerTask += procPwrThatCanBeSharedAgain/(currentRunningTasks.size()-i+1); //divide upon remaining tasks
 			} else {
-				Platform.getInstance().getSubTask(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
+				Platform.instance().getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
 			}
 		}
 	}
 
 	private void pauseAllRunningTasks() {
 		for(SubTaskId t: currentRunningTasks) {
-			Platform.getInstance().getSubTask(t).pause();
+			Platform.instance().getSubTaskForProcessor(t).pause();
 		}
 	}
 
 	private void runAllTasks() {
 		for(SubTaskId t: currentRunningTasks) {
-			Platform.getInstance().getSubTask(t).pause();
+			Platform.instance().getSubTaskForProcessor(t).run();
 		}
 	}
 
@@ -151,5 +150,9 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		if(needsRebalancing)
 			reBalanceTasks();
 
+	}
+
+	public void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
+		this.processingUnit = processingUnit;
 	}
 }

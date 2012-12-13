@@ -59,6 +59,6 @@ public class TaskInMemory {
 	 * @return [0.0,1.0]
 	 */
 	public double getRatioNotAssigned() {
-		return (double) amountNotAssignable.getAmountInKiloByte() / (double) Platform.getInstance().getSubTask(subTaskId).getMemoryDemand().getAmountInKiloByte();
+		return (double) amountNotAssignable.getAmountInKiloByte() / (double) Platform.instance().getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
 	}
 }

@@ -16,7 +16,7 @@ import java.util.List;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingUnit  implements ProcessingUnitListener {
+public class ProcessingUnit implements ProcessingUnitListener {
 
 	private List<ProcessingCore> cores;
 	private IScheduler scheduler;
@@ -25,12 +25,19 @@ public class ProcessingUnit  implements ProcessingUnitListener {
 	private List<SubTaskId> failedSubTasks;
 
 	private TaskManagementListener memoryCallBack;
+	private ProcessingUnitListener platformCallBack;
 
-	public ProcessingUnit(IScheduler scheduler, TaskManagementListener memoryCallBack) {
+	public ProcessingUnit(IScheduler scheduler, TaskManagementListener memoryCallBack,List<ProcessingCore> cores, ProcessingUnitListener platformCallBack) {
 		this.scheduler =scheduler;
 		failedSubTasks = new ArrayList<SubTaskId>();
 		finnishedSubTasks = new ArrayList<SubTaskId>();
 		this.memoryCallBack = memoryCallBack;
+		this.cores=cores;
+		this.platformCallBack = platformCallBack;
+
+		for(ProcessingCore c :cores) {
+			c.setProcessingUnitListener(this);
+		}
 	}
 
 	public void addTask(SubTaskId subTaskId) {
@@ -44,6 +51,7 @@ public class ProcessingUnit  implements ProcessingUnitListener {
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		finnishedSubTasks.add(subTaskId);
 		scheduleTasks();
+		platformCallBack.onTaskFinished(c,subTaskId);
 	}
 
 	public List<SubTaskId> getFinnishedSubTasks() {
@@ -64,7 +72,7 @@ public class ProcessingUnit  implements ProcessingUnitListener {
 			try {
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
-				Platform.getInstance().getSubTask(dest.getSubTaskId()).fail(e);
+				Platform.instance().getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}
 		}

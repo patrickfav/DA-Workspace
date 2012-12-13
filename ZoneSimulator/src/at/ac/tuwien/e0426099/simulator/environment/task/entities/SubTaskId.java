@@ -7,8 +7,15 @@ import java.util.UUID;
  * @since 08.12.12
  */
 public class SubTaskId {
+	private static final UUID HAS_NO_PARENT_UUID = UUID.fromString("97c3f5c5-928a-4eb3-8aed-0fa1990c0d92");
+
 	private UUID parentTaskId;
 	private UUID subTaskId;
+
+	public SubTaskId() {
+		this.parentTaskId = HAS_NO_PARENT_UUID;
+		this.subTaskId = UUID.randomUUID();
+	}
 
 	public SubTaskId(UUID parentTaskId, UUID subTaskId) {
 		this.parentTaskId = parentTaskId;
@@ -21,6 +28,14 @@ public class SubTaskId {
 
 	public UUID getSubTaskId() {
 		return subTaskId;
+	}
+
+	public void upadteParentId(UUID parentTaskId) {
+		this.parentTaskId = parentTaskId;
+	}
+
+	public boolean hasNoParent() {
+		return parentTaskId.equals(HAS_NO_PARENT_UUID);
 	}
 
 	@Override

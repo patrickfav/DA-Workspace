@@ -1,8 +1,15 @@
 package at.ac.tuwien.e0426099.test.task;
 
+import at.ac.tuwien.e0426099.simulator.environment.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingCore;
+import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.FifoLeastLoadScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
+import at.ac.tuwien.e0426099.simulator.environment.task.Task;
+import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -12,17 +19,16 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.Assert.fail;
-
 /**
  * @author PatrickF
- * @since 09.12.12
+ * @since 13.12.12
  */
-public class TestSubTask {
-	private Logger log = LogManager.getLogger(TestSubTask.class.getName());
+public class ProcessorTest {
+	private Logger log = LogManager.getLogger(ProcessorTest.class.getName());
 
 	private ComputationalSubTask subTask1,subTask2,subTask3;
 	private List<ComputationalSubTask> taskList = new ArrayList<ComputationalSubTask>();
+
 	@Before
 	public void setUp() {
 		subTask1 = new ComputationalSubTask("TestSubTask1",new MemoryAmount(10),10l,30000l);
@@ -42,7 +48,11 @@ public class TestSubTask {
 	public void tearDown() {
 		//wait for threads to finish
 		for(ComputationalSubTask t:taskList) {
-			t.waitForThreadToFinish();
+			try {
+				t.waitForThreadToFinish();
+			} catch (Exception e) {
+
+			}
 		}
 		log.info("========================================================");
 	}
@@ -50,48 +60,29 @@ public class TestSubTask {
 
 	@Test
 	public void testSubTaskStartShouldFinish() {
-		subTask1.run();
-		subTask2.run();
-		subTask3.run();
-	}
 
-	@Test
-	public void testSubTaskStartPauseRestartShouldFinish() {
-		subTask2.run();
 
-		waitInTest(500);
+		WorkingMemory memory = new WorkingMemory(new MemoryAmount(4 * 100 * 1000),0.5);
+		ProcessingCore core1 = new ProcessingCore(new RawProcessingPower(1000),5,0.05);
+		ProcessingCore core2 = new ProcessingCore(new RawProcessingPower(1500),5,0.07);
 
-		subTask2.pause();
+		List<ProcessingCore> cores = new ArrayList<ProcessingCore>();
+		cores.add(core1);
+		cores.add(core2);
 
-		waitInTest(500);
+		ProcessingUnit unit = new ProcessingUnit(new FifoLeastLoadScheduler(),memory,cores,Platform.instance());
 
-		subTask2.run();
-	}
+		Platform.instance().setUp(unit);
 
-	@Test
-	public void testSubTaskStartAndSimulatedFail() {
-		subTask2.run();
+		ITask task1 = new Task("Task 1");
 
-		waitInTest(200);
+		task1.addSubTask(subTask1);
+		//task1.addSubTask(subTask2);
 
-		subTask2.pause();
+		//ITask task2 = new Task("Task 2");
+		//task2.addSubTask(subTask3);
 
-		waitInTest(100);
-
-		subTask2.run();
-
-		waitInTest(100);
-
-		subTask2.fail(new NullPointerException());
-
-		waitInTest(100);
-	}
-
-	private void waitInTest(long ms) {
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			fail(e.getMessage());
-		}
+		Platform.instance().addTask(task1);
+		//Platform.instance().addTask(task2);
 	}
 }

@@ -23,6 +23,13 @@ public class WorkingMemory implements TaskManagementListener {
 	private List<TaskInMemory> taskInMemoryList;
 	private List<ChangedMemoryListener> memoryListeners;
 
+	public WorkingMemory(MemoryAmount sizeOfMemory,double memoryNotAssignedPenalityMultiplicator) {
+		this.memoryNotAssignedPenalityMultiplicator = memoryNotAssignedPenalityMultiplicator;
+		this.sizeOfMemory = sizeOfMemory;
+		taskInMemoryList = new ArrayList<TaskInMemory>();
+		memoryListeners = new ArrayList<ChangedMemoryListener>();
+	}
+
 	@Override
 	public synchronized void onSubTaskAdded(SubTaskId subTaskId) {
 		addSubTask(subTaskId);
@@ -55,18 +62,18 @@ public class WorkingMemory implements TaskManagementListener {
 	private void addSubTask(SubTaskId subTaskId) {
 		TaskInMemory tim;
 		if(getFreeMemory().getAmountInKiloByte() > 0) { //has some free mem to give
-			if(getFreeMemory().getAmountInKiloByte() >= Platform.getInstance().getSubTask(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
-				tim = new TaskInMemory(subTaskId, Platform.getInstance().getSubTask(subTaskId).getMemoryDemand(),new MemoryAmount(0));
+			if(getFreeMemory().getAmountInKiloByte() >= Platform.instance().getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
+				tim = new TaskInMemory(subTaskId, Platform.instance().getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
 			} else { //can only assign the rest of free mem
 				tim = new TaskInMemory(subTaskId,getFreeMemory(),
-						new MemoryAmount(Platform.getInstance().getSubTask(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
+						new MemoryAmount(Platform.instance().getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
 			}
 		} else { //no memory to give
-			tim = new TaskInMemory(subTaskId,new MemoryAmount(0), Platform.getInstance().getSubTask(subTaskId).getMemoryDemand());
+			tim = new TaskInMemory(subTaskId,new MemoryAmount(0), Platform.instance().getSubTaskForProcessor(subTaskId).getMemoryDemand());
 		}
 		tim.markChanged();
 		taskInMemoryList.add(tim);
-		Platform.getInstance().getSubTask(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
+		Platform.instance().getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
 	}
 
 	private synchronized MemoryAmount getUsedMemory() {

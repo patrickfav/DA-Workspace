@@ -13,6 +13,6 @@ public class ProcPwrReqIdComparator implements Comparator<SubTaskId> {
 
 	@Override
 	public int compare(SubTaskId o1, SubTaskId o2) {
-		return new Long(Platform.getInstance().getSubTask(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs()).compareTo(Platform.getInstance().getSubTask(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
+		return new Long(Platform.instance().getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs()).compareTo(Platform.instance().getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
 	}
 }
