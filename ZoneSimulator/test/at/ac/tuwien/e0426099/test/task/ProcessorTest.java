@@ -1,6 +1,7 @@
 package at.ac.tuwien.e0426099.test.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingCore;
@@ -37,6 +38,7 @@ public class ProcessorTest {
 		subTask4 = new ComputationalSubTask("TestSubTask4",new MemoryAmount(15),100l,1000l);
 		subTask5 = new ComputationalSubTask("TestSubTask5",new MemoryAmount(15),5l,20000l);
 
+
 	}
 
 	@After
@@ -60,9 +62,9 @@ public class ProcessorTest {
 		cores.add(core1);
 		cores.add(core2);
 
-		ProcessingUnit unit = new ProcessingUnit(new FifoLeastLoadScheduler(),memory,cores,Platform.instance());
+		ProcessingUnit unit = new ProcessingUnit(new FifoLeastLoadScheduler(),memory,cores);
 
-		Platform.instance().setUp("Local",unit);
+		PlatformId id = GodClass.instance().addPlatform("local",unit);
 
 		ITask task1 = new Task("No1");
 
@@ -74,7 +76,7 @@ public class ProcessorTest {
 		task2.addSubTask(subTask2);
 		task2.addSubTask(subTask5);
 
-		Platform.instance().addTask(task1);
-		Platform.instance().addTask(task2);
+		GodClass.instance().getPlatform(id).addTask(task1);
+		GodClass.instance().getPlatform(id).addTask(task2);
 	}
 }

@@ -1,10 +1,11 @@
 package at.ac.tuwien.e0426099.simulator.environment.processor;
 
-import at.ac.tuwien.e0426099.simulator.environment.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
-import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManagementListener;
+import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManagementMemoryListener;
 import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
@@ -21,22 +22,22 @@ import java.util.List;
 public class ProcessingUnit implements ProcessingUnitListener {
 	private Logger log = LogManager.getLogger(ProcessingUnit.class.getName());
 
+	private PlatformId platformId;
 	private List<ProcessingCore> cores;
 	private IScheduler scheduler;
 
 	private List<SubTaskId> finnishedSubTasks;
 	private List<SubTaskId> failedSubTasks;
 
-	private TaskManagementListener memoryCallBack;
+	private TaskManagementMemoryListener memoryCallBack;
 	private ProcessingUnitListener platformCallBack;
 
-	public ProcessingUnit(IScheduler scheduler, TaskManagementListener memoryCallBack,List<ProcessingCore> cores, ProcessingUnitListener platformCallBack) {
+	public ProcessingUnit(IScheduler scheduler, TaskManagementMemoryListener memoryCallBack,List<ProcessingCore> cores) {
 		this.scheduler =scheduler;
 		failedSubTasks = new ArrayList<SubTaskId>();
 		finnishedSubTasks = new ArrayList<SubTaskId>();
 		this.memoryCallBack = memoryCallBack;
 		this.cores=cores;
-		this.platformCallBack = platformCallBack;
 
 		for(int i=0;i<cores.size();i++) {
 			cores.get(i).setProcessingUnitListener(this);
@@ -46,7 +47,7 @@ public class ProcessingUnit implements ProcessingUnitListener {
 	}
 
 	public synchronized void addTask(SubTaskId subTaskId) {
-		log.debug("adding subtask to cpu "+subTaskId);
+		log.debug(getLogRef()+"adding subtask to cpu "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		scheduler.addToQueue(subTaskId);
 		scheduleTasks();
@@ -54,7 +55,7 @@ public class ProcessingUnit implements ProcessingUnitListener {
 
 	@Override
 	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		log.debug("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
+		log.debug(getLogRef()+"task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		finnishedSubTasks.add(subTaskId);
 		scheduleTasks();
@@ -65,7 +66,7 @@ public class ProcessingUnit implements ProcessingUnitListener {
 	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
 		failedSubTasks.add(subTaskId);
 		scheduleTasks();
-		platformCallBack.onTaskFailed(c,subTaskId);
+		platformCallBack.onTaskFailed(c, subTaskId);
 	}
 
 	public List<SubTaskId> getFinnishedSubTasks() {
@@ -76,20 +77,32 @@ public class ProcessingUnit implements ProcessingUnitListener {
 		return failedSubTasks;
 	}
 
+	public void setPlatformId(PlatformId platformId) {
+		this.platformId = platformId;
+		this.memoryCallBack.setPlatformId(platformId);
+		for(int i=0;i<cores.size();i++) {
+			cores.get(i).setPlatformId(platformId);
+		}
+	}
+
+	public void setPlatformCallBack(ProcessingUnitListener platformCallBack) {
+		this.platformCallBack = platformCallBack;
+	}
+
 	/* ********************************************************************************** PRIVATES */
 
 	private void scheduleTasks() {
-		log.debug("scheduling tasks between cores");
+		log.debug(getLogRef()+"scheduling tasks between cores");
 		CoreDestination dest;
 		List<ProcessingCoreInfo> coreInfos = getAllInfos();
 
 		while((dest=scheduler.getNext(coreInfos)) != null) {
 			try {
-				log.debug("next task to schedule: "+Platform.instance().getSubTaskForProcessor(dest.getSubTaskId()).getReadAbleName());
+				log.debug(getLogRef()+"next task to schedule: "+GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()).getReadAbleName());
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
-				log.debug("too much concurrent tasks! failing task.");
-				Platform.instance().getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
+				log.debug(getLogRef()+"too much concurrent tasks! failing task.");
+				GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}
 		}
@@ -109,5 +122,9 @@ public class ProcessingUnit implements ProcessingUnitListener {
 			list.add(core.getInfo());
 		}
 		return list;
+	}
+
+	private String getLogRef(){
+		return "["+platformId+"|CPU]: ";
 	}
 }

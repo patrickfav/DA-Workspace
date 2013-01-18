@@ -1,6 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
@@ -30,6 +31,7 @@ import java.util.concurrent.Semaphore;
 public class ComputationalSubTask implements IComputationalSubTask,ExecutionCallback {
 	private Logger log = LogManager.getLogger(ComputationalSubTask.class.getName());
 	private SubTaskId id;
+	private PlatformId platformId;
 	private String readAbleName;
 	private SubTaskStatus status;
 	private TaskType type;
@@ -76,6 +78,11 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
+	public void setPlatformId(PlatformId id) {
+		platformId = id;
+	}
+
+	@Override
 	public synchronized void pause() {
 		if(status == SubTaskStatus.RUNNING) {
 			setStatus(SubTaskStatus.PAUSED);
@@ -91,7 +98,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		aquireSempahore(checkOnFinishSemaphore);
 		if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
 			setStatus(SubTaskStatus.RUNNING);
-			futureRefForThread = Platform.instance().getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
+			futureRefForThread = GodClass.instance().getPlatform(platformId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
 			throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+getFullReadableID());
 		}

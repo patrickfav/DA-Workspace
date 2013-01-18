@@ -39,8 +39,24 @@ public class SubTaskId {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof SubTaskId && ((SubTaskId) obj).getParentTaskId().equals(parentTaskId) && ((SubTaskId) obj).getSubTaskId().equals(subTaskId); //yea bitch, thats some one line code!
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		SubTaskId subTaskId1 = (SubTaskId) o;
+
+		if (parentTaskId != null ? !parentTaskId.equals(subTaskId1.parentTaskId) : subTaskId1.parentTaskId != null)
+			return false;
+		if (subTaskId != null ? !subTaskId.equals(subTaskId1.subTaskId) : subTaskId1.subTaskId != null) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = parentTaskId != null ? parentTaskId.hashCode() : 0;
+		result = 31 * result + (subTaskId != null ? subTaskId.hashCode() : 0);
+		return result;
 	}
 
 	@Override

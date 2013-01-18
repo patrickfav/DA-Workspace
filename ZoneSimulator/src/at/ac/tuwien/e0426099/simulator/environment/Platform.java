@@ -21,75 +21,46 @@ import java.util.concurrent.Executors;
  */
 public class Platform implements ProcessingUnitListener {
 	private Logger log = LogManager.getLogger(Platform.class.getName());
-	private static Platform instance;
 
-	private String platformName;
+	private PlatformId platformId;
 	private ExecutorService threadPool;
 	private ConcurrentHashMap<UUID,ITask> taskMap;
 
 	private ProcessingUnit processingUnit;
 
-	private boolean setUp = false;
 
-	public static Platform instance() {
-		if(instance == null) {
-			instance = new Platform();
-		}
-		return instance;
-	}
-
-	private Platform() {
+	public Platform(PlatformId platformId, ProcessingUnit unit) {
+		this.platformId = platformId;
 		taskMap = new ConcurrentHashMap<UUID,ITask>();
 		threadPool = Executors.newCachedThreadPool();
+		processingUnit = unit;
+		processingUnit.setPlatformId(platformId);
+		processingUnit.setPlatformCallBack(this);
+		//processingUnit.start();
 	}
 
+
 	public void addTask(ITask task) {
+		task.setPlatformId(platformId);
 		log.info(this+" Add new Task: "+task);
-		checkSetup();
 		taskMap.put(task.getId(),task);
 		dispatcher(task);
 	}
 
 	public ITask getTask(UUID id) {
-		if(taskMap.containsKey(id)) {
-			return taskMap.get(id);
-		} else {
-			return null;
-		}
+		return taskMap.get(id);
 	}
 
 	public IComputationalSubTask getSubTaskForProcessor(SubTaskId subTaskId) {
-		if(taskMap.containsKey(subTaskId.getParentTaskId())) {
-			return (IComputationalSubTask) taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
-		} else {
-			return null;
-		}
+		return (IComputationalSubTask) taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
 	}
 
 	public ISubTask getSubTask(SubTaskId subTaskId) {
-		if(taskMap.containsKey(subTaskId.getParentTaskId())) {
-			return taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
-		} else {
-			return null;
-		}
+		return taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
 	}
 
 	public synchronized ExecutorService getThreadPool() {
 		return threadPool;
-	}
-
-	public void setUp(String platformName, ProcessingUnit unit) {
-		processingUnit = unit;
-		//processingUnit.start();
-		this.platformName = platformName;
-		setUp =true;
-
-	}
-
-	private void checkSetup() {
-		if(!setUp) {
-			throw new RuntimeException("Cannot use Platform if it wasn't set up properly. Please call setUp first.");
-		}
 	}
 
 	private boolean dispatcher(ITask task) {
@@ -136,6 +107,6 @@ public class Platform implements ProcessingUnitListener {
 
 	@Override
 	public String toString() {
-		return "[Platform|"+platformName+"]";
+		return "[Platform|"+ platformId +"]";
 	}
 }

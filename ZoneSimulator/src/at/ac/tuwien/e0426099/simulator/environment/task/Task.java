@@ -1,5 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
+import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import org.apache.log4j.LogManager;
@@ -15,6 +16,7 @@ public class Task implements ITask{
 	private Logger log = LogManager.getLogger(Task.class.getName());
 
 	private UUID id;
+	private PlatformId platformId;
 	private String readAbleName;
 	private Map<UUID,ISubTask> subTasks;
 	private List<UUID> subTaskOrder;
@@ -91,6 +93,14 @@ public class Task implements ITask{
 	}
 
 	@Override
+	public void setPlatformId(PlatformId id) {
+		platformId=id;
+		for(ISubTask st: subTasks.values()) {
+			st.setPlatformId(id);
+		}
+	}
+
+	@Override
 	public void blockWaitUntilFinished() {
 		for (UUID id : subTaskOrder) {
 			if(subTasks.get(id).getStatus() == ISubTask.SubTaskStatus.RUNNING) {
@@ -104,12 +114,12 @@ public class Task implements ITask{
 	}
 
 	private void setStatus(TaskStatus newStatus) {
-		log.debug(getLogRef()+"Set status from "+status+" to "+newStatus);
+		log.debug(getLogRef() + "Set status from " + status + " to " + newStatus);
 		this.status = newStatus;
 	}
 
 	private String getLogRef() {
-		return "[Task|"+readAbleName+"]: ";
+		return "["+platformId+"|Task|"+readAbleName+"]: ";
 	}
 
 	@Override
