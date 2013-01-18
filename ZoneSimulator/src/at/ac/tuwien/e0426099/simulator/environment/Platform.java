@@ -97,11 +97,17 @@ public class Platform implements ProcessingUnitListener {
 
 	private void dispatchTasks(SubTaskId subTaskId) {
 		if(!dispatcher(taskMap.get(subTaskId.getParentTaskId()))) {
-			log.debug(this+" Waiting for tasks to finish...");
-			for(ITask task:taskMap.values()) {
+			/*log.debug(this+" Waiting for tasks to finish...");
+			/*for(ITask task:taskMap.values()) {
 				task.blockWaitUntilFinished();
+
 			}
-			log.debug(this+" All done.");
+			try {
+				threadPool.awaitTermination(20, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}*/
+			//log.debug(this+" Nothing more to dispatch right now.");
 		}
 	}
 

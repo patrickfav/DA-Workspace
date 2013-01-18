@@ -29,6 +29,7 @@ import java.util.concurrent.Semaphore;
  * @since 08.12.12
  */
 public class ComputationalSubTask implements IComputationalSubTask,ExecutionCallback {
+
 	private Logger log = LogManager.getLogger(ComputationalSubTask.class.getName());
 	private SubTaskId id;
 	private PlatformId platformId;
@@ -87,7 +88,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		if(status == SubTaskStatus.RUNNING) {
 			setStatus(SubTaskStatus.PAUSED);
 			interruptExecThread();
-			aquireSempahore(startStopSemaphore);
+			aquireSempahore(startStopSemaphore,"startStopPause()");
 		} else {
 			logMsgWarn("Can't pause while not running");
 		}
@@ -95,26 +96,26 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	@Override
 	public synchronized void run() {
-		aquireSempahore(checkOnFinishSemaphore);
+		aquireSempahore(checkOnFinishSemaphore,"checkFinishRun()");
 		if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
 			setStatus(SubTaskStatus.RUNNING);
 			futureRefForThread = GodClass.instance().getPlatform(platformId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
 			throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+getFullReadableID());
 		}
-		aquireSempahore(startStopSemaphore);
-		releaseSempahore(checkOnFinishSemaphore);
+		aquireSempahore(startStopSemaphore,"startStopRun()");
+		releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
 	}
 
 	@Override
 	public synchronized void fail(Exception e) {
-		aquireSempahore(checkOnFinishSemaphore);
+		aquireSempahore(checkOnFinishSemaphore,"checkFinsihFail()");
 		logMsgInfo("Task failed. ["+e.getClass().getSimpleName()+"]");
 		setStatus(SubTaskStatus.SIMULATED_ERROR);
 		exception=e;
 		interruptExecThread();
-		aquireSempahore(startStopSemaphore);
-		releaseSempahore(checkOnFinishSemaphore);
+		aquireSempahore(startStopSemaphore,"startStopFail()");
+		releaseSempahore(checkOnFinishSemaphore,"checkFinsihFail()");
 	}
 
 	@Override
@@ -190,21 +191,24 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			throw new RunOnIllegalStateException("Trying to start while still running (Status: "+status+") in task "+getFullReadableID());
 		}
 		logMsgInfo("Start task. Estimated time to finish: " + timeToSleep+"ms");
-		releaseSempahore(startStopSemaphore);
+		releaseSempahore(startStopSemaphore,"startStopExecRun");
 	}
 
 	@Override
 	public void onExecFinished() {
-		aquireSempahore(checkOnFinishSemaphore);
+		aquireSempahore(checkOnFinishSemaphore,"checkFinishOnExecFinsish");
 		taskWorkManager.stopCurrentProcessing();
 		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
 			logMsgInfo("Task Finished. [Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms," +
 					" Overall spent: "+String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms]");
 			setStatus(SubTaskStatus.FINISHED);
+		}
 
+		releaseSempahore(checkOnFinishSemaphore,"checkFinishOnExecFinsish");
+
+		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
 			callAllListenerFinished();
 		}
-		releaseSempahore(checkOnFinishSemaphore);
 	}
 
 	@Override
@@ -215,7 +219,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		} else {
 			logMsgWarn("Task interrupted but not from our Framework, that's strange. Status: "+status);
 		}
-		releaseSempahore(startStopSemaphore);
+		releaseSempahore(startStopSemaphore,"startStopExecInterrupt");
 	}
 
 	@Override
@@ -224,17 +228,18 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
 		log.error(getFullReadableID()+": "+"Exception thrown while executing Thread",e);
+		releaseSempahore(startStopSemaphore,"startStopExecException");
 		callAllListenerFailed();
-		releaseSempahore(startStopSemaphore);
+
 	}
 
 	/* ***************************************************************************** PRIVATES */
 
 	private synchronized void interruptExecThread() {
-		logMsgDebug("interrupt called");
+		logMsgVerbose("interrupt called");
 		if(futureRefForThread != null) {
 			if(!futureRefForThread.cancel(true)) {
-				releaseSempahore(startStopSemaphore); //release if it cant be canceld, since it would never get to callbacks
+				releaseSempahore(startStopSemaphore,"startStopInterrupt"); //release if it cant be canceld, since it would never get to callbacks
 			}
 		}
 		futureRefForThread =null; //can only interrupt once
@@ -248,6 +253,10 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	private void logMsgWarn(String msg) {
 		log.warn(getFullReadableID()+": "+msg);
 	}
+	private void logMsgVerbose(String msg) {
+		if(GodClass.VERBOSE_LOG_MODE)
+			log.debug(getFullReadableID()+": "+msg);
+	}
 
 	private void logMsgDebug(String msg) {
 		log.debug(getFullReadableID()+": "+msg);
@@ -258,7 +267,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	private String getFullReadableID() {
-		return readAbleName+" ("+id.getSubTaskId().toString().substring(0,5)+"...)";
+		return "["+platformId+"|ST|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"]";
 	}
 
 	private void callAllListenerFinished() {
@@ -272,17 +281,18 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		}
 	}
 
-	private void aquireSempahore(Semaphore s) {
+	private void aquireSempahore(Semaphore s, String msg) {
 		try {
-			logMsgDebug("Start acquiring semaphore");
+			logMsgVerbose("Start acquiring semaphore: "+msg);
 			s.acquire();
-			logMsgDebug("Done acquiring.");
+			logMsgVerbose("Done acquiring "+msg);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void releaseSempahore(Semaphore s) {
+	private void releaseSempahore(Semaphore s, String msg) {
+		logMsgVerbose("Release semaphore: "+msg);
 		s.release();
 	}
 }

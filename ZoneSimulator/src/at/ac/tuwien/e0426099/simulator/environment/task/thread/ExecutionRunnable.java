@@ -1,12 +1,16 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.thread;
 
+import at.ac.tuwien.e0426099.simulator.environment.GodClass;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ExecutionCallback;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * @author PatrickF
  * @since 09.12.12
  */
 public class ExecutionRunnable implements Runnable{
+	private Logger log = LogManager.getLogger(ExecutionRunnable.class.getName());
 	private long timeToExecute;
 	private ExecutionCallback executionCallback;
 
@@ -21,6 +25,8 @@ public class ExecutionRunnable implements Runnable{
 	public void run() {
 		try {
 			executionCallback.onExecRun();
+			if(GodClass.VERBOSE_LOG_MODE)
+				log.debug("Thread start sleep "+timeToExecute);
 			Thread.sleep(Math.max(0,timeToExecute));
 			executionCallback.onExecFinished();
 		} catch (InterruptedException e) {

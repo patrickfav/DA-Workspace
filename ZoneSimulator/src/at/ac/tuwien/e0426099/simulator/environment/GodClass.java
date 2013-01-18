@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 18.01.13
  */
 public class GodClass {
+	public static final boolean VERBOSE_LOG_MODE = true;
 
 	private ConcurrentHashMap<UUID,Platform> platforms;
 

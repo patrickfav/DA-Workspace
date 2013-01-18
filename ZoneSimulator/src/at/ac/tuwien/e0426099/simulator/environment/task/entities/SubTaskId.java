@@ -61,9 +61,6 @@ public class SubTaskId {
 
 	@Override
 	public String toString() {
-		return "SubTaskId{" +
-				"parentTaskId=" + parentTaskId.toString().substring(0,5) +
-				"..., subTaskId=" + subTaskId.toString().substring(0,5) +
-				"...}";
+		return "SubTaskId(P:"+ parentTaskId.toString().substring(0,5) +"/ST:" + subTaskId.toString().substring(0,5) +")";
 	}
 }

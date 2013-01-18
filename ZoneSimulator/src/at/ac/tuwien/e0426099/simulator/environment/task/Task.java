@@ -1,5 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
+import at.ac.tuwien.e0426099.simulator.environment.GodClass;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
@@ -55,7 +56,9 @@ public class Task implements ITask{
 	}
 	@Override
 	public boolean subTasksLeftToDo() {
-		log.debug(getLogRef()+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
+		if(GodClass.VERBOSE_LOG_MODE)
+			log.debug(getLogRef()+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
+
 		if(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()) {
 			return true;
 		} else {
@@ -124,9 +127,6 @@ public class Task implements ITask{
 
 	@Override
 	public String toString() {
-		return  readAbleName+"{" +
-				"id='" + id.toString().substring(0,5) + '\'' +
-				"..., status=" + status +
-				'}';
+		return  readAbleName+"/" + id.toString().substring(0,5)+" (status=" + status+")";
 	}
 }
