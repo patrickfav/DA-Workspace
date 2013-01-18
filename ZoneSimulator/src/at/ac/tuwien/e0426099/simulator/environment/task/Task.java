@@ -27,7 +27,7 @@ public class Task implements ITask{
 		this.subTasks = new HashMap<UUID, ISubTask>();
 		subTaskOrder =new ArrayList<UUID>();
 		currentSubTask=-1;
-		status = TaskStatus.NOT_STARTED;
+		setStatus(TaskStatus.NOT_STARTED);
 	}
 
 	public void addSubTask(ISubTask subTask) {
@@ -39,10 +39,10 @@ public class Task implements ITask{
 	@Override
 	public ISubTask getNextSubTask() {
 		if(subTasksLeftToDo()) {
-			status = TaskStatus.IN_PROGRESS;
+			setStatus(TaskStatus.IN_PROGRESS);
 			return getSubTaskById(subTaskOrder.get(++currentSubTask));
 		}
-		status = TaskStatus.FINISHED;
+		setStatus(TaskStatus.FINISHED);
 		return null;
 	}
 	@Override
@@ -53,13 +53,23 @@ public class Task implements ITask{
 	}
 	@Override
 	public boolean subTasksLeftToDo() {
-		log.debug(readAbleName+": "+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
-		return subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size();
+		log.debug(getLogRef()+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
+		if(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()) {
+			return true;
+		} else {
+			setStatus(TaskStatus.FINISHED);
+			return false;
+		}
 	}
 
 	@Override
 	public TaskStatus getTaskStatus() {
 		return status;
+	}
+
+	@Override
+	public void registerFailedSubTask(UUID subTaskId) {
+		setStatus(TaskStatus.ERROR);
 	}
 
 	@Override
@@ -91,6 +101,15 @@ public class Task implements ITask{
 				}
 			}
 		}
+	}
+
+	private void setStatus(TaskStatus newStatus) {
+		log.debug(getLogRef()+"Set status from "+status+" to "+newStatus);
+		this.status = newStatus;
+	}
+
+	private String getLogRef() {
+		return "[Task|"+readAbleName+"]: ";
 	}
 
 	@Override

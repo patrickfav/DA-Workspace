@@ -9,4 +9,5 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
  */
 public interface ProcessingUnitListener {
 	public void onTaskFinished(ProcessingCore c,SubTaskId subTaskId);
+	public void onTaskFailed(ProcessingCore c,SubTaskId subTaskId);
 }

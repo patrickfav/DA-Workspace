@@ -26,7 +26,7 @@ import java.util.List;
 public class ProcessorTest {
 	private Logger log = LogManager.getLogger(ProcessorTest.class.getName());
 
-	private ComputationalSubTask subTask1,subTask2,subTask3;
+	private ComputationalSubTask subTask1,subTask2,subTask3,subTask4,subTask5;
 	private List<ComputationalSubTask> taskList = new ArrayList<ComputationalSubTask>();
 
 	@Before
@@ -34,6 +34,8 @@ public class ProcessorTest {
 		subTask1 = new ComputationalSubTask("TestSubTask1",new MemoryAmount(10),10l,30000l);
 		subTask2 = new ComputationalSubTask("TestSubTask2",new MemoryAmount(15),15l,40000l);
 		subTask3 = new ComputationalSubTask("TestSubTask3",new MemoryAmount(15),10l,10000l);
+		subTask4 = new ComputationalSubTask("TestSubTask4",new MemoryAmount(15),100l,1000l);
+		subTask5 = new ComputationalSubTask("TestSubTask5",new MemoryAmount(15),5l,20000l);
 
 	}
 
@@ -62,13 +64,15 @@ public class ProcessorTest {
 
 		Platform.instance().setUp("Local",unit);
 
-		ITask task1 = new Task("Task 1");
+		ITask task1 = new Task("No1");
 
 		task1.addSubTask(subTask1);
 		task1.addSubTask(subTask3);
+		task1.addSubTask(subTask4);
 
-		ITask task2 = new Task("Task 2");
+		ITask task2 = new Task("No2");
 		task2.addSubTask(subTask2);
+		task2.addSubTask(subTask5);
 
 		Platform.instance().addTask(task1);
 		Platform.instance().addTask(task2);

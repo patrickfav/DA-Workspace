@@ -10,6 +10,8 @@ import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationa
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ExecutionCallback;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.thread.ExecutionRunnable;
+import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
+import at.ac.tuwien.e0426099.simulator.exceptions.RunOnIllegalStateException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -73,7 +75,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	@Override
 	public synchronized void pause() {
 		if(status == SubTaskStatus.RUNNING) {
-			setStatus(SubTaskStatus.PAUSED);
+			setStatus(SubTaskStatus.CANCELING);
 			interruptExecThread();
 		} else {
 			logMsgWarn("Can't pause while not running");
@@ -83,9 +85,10 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	@Override
 	public synchronized void run() {
 		if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
+			setStatus(SubTaskStatus.RUNNING);
 			futureRefForThread = Platform.instance().getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
-			throw new RuntimeException("Can only start running when in pause or not started");
+			throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+getFullReadableID());
 		}
 	}
 
@@ -98,7 +101,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public void updateAvailableProcessingPower(RawProcessingPower resources) {
+	public synchronized void updateAvailableProcessingPower(RawProcessingPower resources) {
 		if(resources.getComputationsPerMs() > requirements.getMaxComputationalUtilization().getComputationsPerMs()) {
 			availableProcPower = requirements.getMaxComputationalUtilization();
 		} else {
@@ -163,14 +166,18 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	/* ***************************************************************************** CALLBACKS FROM THREAD */
 
 	@Override
-	public void onExecRun() {
-		long timeToSleep=taskWorkManager.startProcessing(new Date(),availableProcPower);
-		setStatus(SubTaskStatus.RUNNING);
+	public synchronized void onExecRun() {
+		long timeToSleep= 0;
+		try {
+			timeToSleep = taskWorkManager.startProcessing(new Date(),availableProcPower);
+		} catch (CantStartException e) {
+			throw new RunOnIllegalStateException("Trying to start while still running (Status: "+status+") in task "+getFullReadableID());
+		}
 		logMsgInfo("Start task. Estimated time to finish: " + timeToSleep+"ms");
 	}
 
 	@Override
-	public void onExecFinished() {
+	public synchronized void onExecFinished() {
 		taskWorkManager.stopCurrentProcessing();
 
 		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
@@ -182,33 +189,37 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public void onExecInterrupted() {
+	public synchronized void onExecInterrupted() {
+		setStatus(SubTaskStatus.PAUSED);
 		taskWorkManager.stopCurrentProcessing();
 		if(status == SubTaskStatus.PAUSED) {
 			logMsgInfo("Task paused. Time spent since last start: "+((taskWorkManager.getRecentSlice() != null) ? taskWorkManager.getRecentSlice().getActualTimeSpendOnComputation(): "null ")+"ms");
-		} else if(status == SubTaskStatus.RUNNING) {
-			logMsgWarn("Task interrupted but not from our Framework, that's strange...");
+		} else {
+			logMsgWarn("Task interrupted but not from our Framework, that's strange. Status: "+status);
 		}
 	}
 
 	@Override
-	public void onExecException(Exception e) {
+	public synchronized void onExecException(Exception e) {
 		taskWorkManager.stopCurrentProcessing();
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
 		log.error(getFullReadableID()+": "+"Exception thrown while executing Thread",e);
+
+		callAllListenerFailed();
 	}
 	/* ***************************************************************************** PRIVATES */
 
-	private void interruptExecThread() {
+	private synchronized void interruptExecThread() {
+		logMsgDebug("interrupt called");
 		if(futureRefForThread != null) {
-			futureRefForThread.cancel(true);
+			waitForPossibleCancels(futureRefForThread.cancel(true));
 		}
 		futureRefForThread =null; //can only interrupt once
 	}
 
 	private synchronized void setStatus(SubTaskStatus t) {
-		logMsgDebug("Status: " + t);
+		logMsgDebug("Status change from "+status+" to " + t);
 		status = t;
 	}
 
@@ -233,4 +244,22 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			l.onTaskFinished(id);
 		}
 	}
+	private void callAllListenerFailed() {
+		for(ITaskListener l:listeners) {
+			l.onTaskFailed(id);
+		}
+	}
+
+	private void waitForPossibleCancels(boolean cancelResult) {
+		if (futureRefForThread != null) {
+			logMsgDebug("Wating for cancel... (" + futureRefForThread.isCancelled() + "," + futureRefForThread.isDone() + ")");
+			try {
+				if (!cancelResult)
+					futureRefForThread.get();
+			} catch (Exception e) {
+				logMsgWarn("Never mind: " + e);
+			}
+		}
+	}
+
 }

@@ -2,6 +2,7 @@ package at.ac.tuwien.e0426099.simulator.environment.task.entities;
 
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,13 +24,13 @@ public class TaskWorkManager {
 		computationsLeftToDo = processingRequirements.getComputationNeedForCompletion();
 	}
 
-	public synchronized long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) {
+	public synchronized long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) throws CantStartException {
 		if(processingSlices.size() > 0) {
 			if(getRecentSlice().isStillProcessing()) {
-				throw new RuntimeException("Cannot start processing while already in processing");
+				throw new CantStartException("Cannot start processing while already in processing");
 			}
 			if(givenProcessingPower.getComputationsPerMs() > processingRequirements.getMaxComputationalUtilization().getComputationsPerMs()) {
-				throw new RuntimeException("Cannot process with that much power. Only so much possible as ProcessingRequirements state");
+				throw new CantStartException("Cannot process with that much power. Only so much possible as ProcessingRequirements state");
 			}
 		}
 

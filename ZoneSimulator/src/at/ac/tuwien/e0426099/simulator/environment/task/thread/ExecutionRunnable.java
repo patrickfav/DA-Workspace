@@ -21,7 +21,7 @@ public class ExecutionRunnable implements Runnable{
 	public void run() {
 		try {
 			executionCallback.onExecRun();
-			Thread.sleep(timeToExecute);
+			Thread.sleep(Math.max(0,timeToExecute));
 			executionCallback.onExecFinished();
 		} catch (InterruptedException e) {
 			executionCallback.onExecInterrupted();

@@ -10,6 +10,8 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +23,7 @@ import java.util.UUID;
  * @since 07.12.12
  */
 public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemoryListener {
+	private Logger log = LogManager.getLogger(ProcessingCore.class.getName());
 
 	private UUID id;
 	private RawProcessingPower rawProcessingPower;
@@ -37,18 +40,19 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		this.maxConcurrentTasks = maxConcurrentTasks;
 		this.concurrentTaskPenaltyPercentage = concurrentTaskPenaltyPercentage;
 		coreName ="Unassigned Core";
-		currentRunningTasks=new ArrayList<SubTaskId>();
+		currentRunningTasks=Collections.synchronizedList(new ArrayList<SubTaskId>());
 		id=UUID.randomUUID();
 	}
 
 	public synchronized void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
+		log.debug(getLogRef() + "Add task " + subTaskId);
 		Platform.instance().getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
 			throw new TooMuchConcurrentTasksException("Cannot add this task "+Platform.instance().getSubTaskForProcessor(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
-			pauseAllRunningTasks();
+			pauseAllUnfinishedTasks();
 
 			currentRunningTasks.add(subTaskId); //add new task
 
@@ -64,15 +68,22 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 
 	@Override
 	public synchronized void onTaskFinished(SubTaskId subTaskId) {
-		pauseAllRunningTasks();
-
+		pauseAllUnfinishedTasks();
+		log.debug(getLogRef() + "Remove " + subTaskId + " from running tasks");
 		currentRunningTasks.remove(subTaskId); //removed finished task
-
 		reBalanceTasks();
-
 		runAllTasks();
-
 		processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
+	}
+
+	@Override
+	public synchronized void onTaskFailed(SubTaskId subTaskId) {
+		pauseAllUnfinishedTasks();
+		log.debug(getLogRef() + "Failed task " + subTaskId + " removed");
+		currentRunningTasks.remove(subTaskId); //removed finished task
+		reBalanceTasks();
+		runAllTasks();
+		processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
 	}
 
 	public int getMaxConcurrentTasks() {
@@ -122,17 +133,28 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		}
 	}
 
-	private void pauseAllRunningTasks() {
+	private void pauseAllUnfinishedTasks() {
 		for(SubTaskId t: currentRunningTasks) {
-			if(Platform.instance().getSubTaskForProcessor(t).getStatus() == ISubTask.SubTaskStatus.RUNNING)
+			if(Platform.instance().getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
+				log.debug(getLogRef()+"Pause Task "+t+".");
 				Platform.instance().getSubTaskForProcessor(t).pause();
+			}
 		}
 	}
 
 	private void runAllTasks() {
 		for(SubTaskId t: currentRunningTasks) {
-			Platform.instance().getSubTaskForProcessor(t).run();
+			log.debug(getLogRef()+"Run Task "+t+".");
+			try {
+				Platform.instance().getSubTaskForProcessor(t).run();
+			} catch (Exception e) {
+				log.error(getLogRef()+"Exception caught while trying to run all tasks",e);
+			}
 		}
+	}
+
+	private String getLogRef(){
+		return "[Core|"+coreName+"]: ";
 	}
 
 	@Override
@@ -166,6 +188,8 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	public void setCoreName(String coreName) {
 		this.coreName = coreName;
 	}
+
+
 
 	@Override
 	public String toString() {

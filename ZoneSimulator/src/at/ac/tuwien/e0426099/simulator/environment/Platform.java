@@ -115,6 +115,16 @@ public class Platform implements ProcessingUnitListener {
 
 	@Override
 	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+		dispatchTasks(subTaskId);
+	}
+
+	@Override
+	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
+		dispatchTasks(subTaskId);
+	}
+
+	private void dispatchTasks(SubTaskId subTaskId) {
 		if(!dispatcher(taskMap.get(subTaskId.getParentTaskId()))) {
 			log.debug(this+" Waiting for tasks to finish...");
 			for(ITask task:taskMap.values()) {
@@ -126,6 +136,6 @@ public class Platform implements ProcessingUnitListener {
 
 	@Override
 	public String toString() {
-		return "["+platformName+"]";
+		return "[Platform|"+platformName+"]";
 	}
 }

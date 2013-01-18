@@ -40,12 +40,12 @@ public class ProcessingUnit implements ProcessingUnitListener {
 
 		for(int i=0;i<cores.size();i++) {
 			cores.get(i).setProcessingUnitListener(this);
-			cores.get(i).setCoreName("Core " + String.valueOf(i));
+			cores.get(i).setCoreName("C" + String.valueOf(i));
 			//cores.get(i).start();
 		}
 	}
 
-	public void addTask(SubTaskId subTaskId) {
+	public synchronized void addTask(SubTaskId subTaskId) {
 		log.debug("adding subtask to cpu "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		scheduler.addToQueue(subTaskId);
@@ -53,12 +53,19 @@ public class ProcessingUnit implements ProcessingUnitListener {
 	}
 
 	@Override
-	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
 		log.debug("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		finnishedSubTasks.add(subTaskId);
 		scheduleTasks();
 		platformCallBack.onTaskFinished(c,subTaskId);
+	}
+
+	@Override
+	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+		failedSubTasks.add(subTaskId);
+		scheduleTasks();
+		platformCallBack.onTaskFailed(c,subTaskId);
 	}
 
 	public List<SubTaskId> getFinnishedSubTasks() {
@@ -78,8 +85,10 @@ public class ProcessingUnit implements ProcessingUnitListener {
 
 		while((dest=scheduler.getNext(coreInfos)) != null) {
 			try {
+				log.debug("next task to schedule: "+Platform.instance().getSubTaskForProcessor(dest.getSubTaskId()).getReadAbleName());
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
+				log.debug("too much concurrent tasks! failing task.");
 				Platform.instance().getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}

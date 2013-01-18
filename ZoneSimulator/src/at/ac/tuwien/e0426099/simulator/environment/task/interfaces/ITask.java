@@ -19,6 +19,7 @@ public interface ITask {
 	public ISubTask getSubTaskById(UUID id);
 	public boolean subTasksLeftToDo();
 	public TaskStatus getTaskStatus();
+	public void registerFailedSubTask(UUID subTaskId);
 
 	public void blockWaitUntilFinished();
 
