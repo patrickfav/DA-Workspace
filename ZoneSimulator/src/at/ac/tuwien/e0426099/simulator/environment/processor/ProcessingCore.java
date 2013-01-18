@@ -138,6 +138,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 			if(Platform.instance().getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
 				log.debug(getLogRef()+"Pause Task "+t+".");
 				Platform.instance().getSubTaskForProcessor(t).pause();
+				//Platform.instance().getSubTaskForProcessor(t).waitForPause();
 			}
 		}
 	}
@@ -147,6 +148,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 			log.debug(getLogRef()+"Run Task "+t+".");
 			try {
 				Platform.instance().getSubTaskForProcessor(t).run();
+				//Platform.instance().getSubTaskForProcessor(t).waitForStartedRunning();
 			} catch (Exception e) {
 				log.error(getLogRef()+"Exception caught while trying to run all tasks",e);
 			}
