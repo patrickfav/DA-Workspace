@@ -7,6 +7,7 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
+import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -115,4 +116,11 @@ public class Platform implements ProcessingUnitListener {
 	public String toString() {
 		return "[Platform|"+ platformId +"]";
 	}
+
+    public synchronized String getCompleteStatus(boolean detailed) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(LogUtil.BR+LogUtil.h2("Platform: "+this));
+        sb.append(processingUnit.getCompleteStatus(detailed));
+        return sb.toString();
+    }
 }

@@ -32,4 +32,9 @@ public class ProcessingRequirements {
 	public long getMinimumExecutionTimeMs() {
 		return maxComputationalUtilization.getEstimatedTimeInMsToFinish(this);
 	}
+
+    @Override
+    public String toString() {
+        return "MaxUtil: "+maxComputationalUtilization+", NeededCPUCycles: "+computationNeedForCompletion;
+    }
 }

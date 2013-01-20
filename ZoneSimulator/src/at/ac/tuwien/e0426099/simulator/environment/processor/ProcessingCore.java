@@ -11,6 +11,7 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -68,30 +69,6 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		return currentRunningTasks.size() < maxConcurrentTasks;
 	}
 
-	@Override
-	public synchronized void onTaskFinished(SubTaskId subTaskId) {
-		pauseAllUnfinishedTasks();
-		log.debug(getLogRef() + "Remove " + subTaskId + " from running tasks");
-		currentRunningTasks.remove(subTaskId); //removed finished task
-		reBalanceTasks();
-		runAllTasks();
-		processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
-	}
-
-	@Override
-	public synchronized void onTaskFailed(SubTaskId subTaskId) {
-		pauseAllUnfinishedTasks();
-		log.debug(getLogRef() + "Failed task " + subTaskId + " removed");
-		currentRunningTasks.remove(subTaskId); //removed finished task
-		reBalanceTasks();
-		runAllTasks();
-		processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
-	}
-
-	public int getMaxConcurrentTasks() {
-		return maxConcurrentTasks;
-	}
-
 	public synchronized int getCurrentRunningTasksSize() {
 		return currentRunningTasks.size();
 	}
@@ -112,6 +89,11 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		return new ProcessingCoreInfo(id, coreName,getLoad(),getCurrentRunningTasksSize(),maxConcurrentTasks);
 	}
 
+
+    public int getMaxConcurrentTasks() {
+        return maxConcurrentTasks;
+    }
+
 	public UUID getCoreId() {
 		return id;
 	}
@@ -119,6 +101,79 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	public void setPlatformId(PlatformId platformId) {
 		this.platformId = platformId;
 	}
+
+    public void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
+        this.processingUnit = processingUnit;
+    }
+
+    public String getCoreName() {
+        return coreName;
+    }
+
+    public void setCoreName(String coreName) {
+        this.coreName = coreName;
+    }
+
+    @Override
+    public String toString() {
+        return coreName;
+    }
+
+    public synchronized String getCompleteStatus(boolean detailed) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(LogUtil.BR);
+        sb.append(getLogRef()+" ProcPower: "+rawProcessingPower+", MaxConcurrentTasks: "+maxConcurrentTasks+ ", ConcTaskPenalty: "+concurrentTaskPenaltyPercentage +LogUtil.BR);
+        sb.append("Current Running Tasks:" +LogUtil.BR);
+        sb.append(LogUtil.emptyListText(currentRunningTasks," - no tasks -"));
+        for(SubTaskId id:currentRunningTasks) {
+            sb.append(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+        }
+        return sb.toString();
+    }
+
+    /* ********************************************************************************** CALLBACKS */
+
+    @Override
+    public synchronized void onTaskFinished(SubTaskId subTaskId) {
+        pauseAllUnfinishedTasks();
+        log.debug(getLogRef() + "Remove " + subTaskId + " from running tasks");
+        currentRunningTasks.remove(subTaskId); //removed finished task
+        reBalanceTasks();
+        runAllTasks();
+        processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
+    }
+
+    @Override
+    public synchronized void onTaskFailed(SubTaskId subTaskId) {
+        pauseAllUnfinishedTasks();
+        log.debug(getLogRef() + "Failed task " + subTaskId + " removed");
+        currentRunningTasks.remove(subTaskId); //removed finished task
+        reBalanceTasks();
+        runAllTasks();
+        processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
+    }
+
+
+    @Override
+    public synchronized void subTaskHaveAlteredMemoryAssignement(List<SubTaskId> subTaskIds) {
+        boolean needsRebalancing = false;
+        for(SubTaskId idOuter:subTaskIds) {
+            for(SubTaskId idInner:currentRunningTasks) {
+                if(idOuter.equals(idInner)) {
+                    needsRebalancing = true;
+                    break;
+                }
+            }
+
+            if(needsRebalancing)
+                break;
+        }
+
+        if(needsRebalancing)
+            reBalanceTasks();
+
+    }
+
 	/* ********************************************************************************** PRIVATES */
 
 	private void reBalanceTasks() {
@@ -138,7 +193,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		}
 	}
 
-	private void pauseAllUnfinishedTasks() {
+	private synchronized void pauseAllUnfinishedTasks() {
 		for(SubTaskId t: currentRunningTasks) {
 			if(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
 				log.debug(getLogRef()+"Pause Task "+t+".");
@@ -148,7 +203,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		}
 	}
 
-	private void runAllTasks() {
+	private synchronized void runAllTasks() {
 		for(SubTaskId t: currentRunningTasks) {
 			log.debug(getLogRef()+"Run Task "+t+".");
 			try {
@@ -162,42 +217,5 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 
 	private String getLogRef(){
 		return "["+platformId+"|CPU|Core|"+coreName+"]: ";
-	}
-
-	@Override
-	public void subTaskHaveAlteredMemoryAssignement(List<SubTaskId> subTaskIds) {
-		boolean needsRebalancing = false;
-		for(SubTaskId idOuter:subTaskIds) {
-			for(SubTaskId idInner:currentRunningTasks) {
-				if(idOuter.equals(idInner)) {
-					needsRebalancing = true;
-					break;
-				}
-			}
-
-			if(needsRebalancing)
-				break;
-		}
-
-		if(needsRebalancing)
-			reBalanceTasks();
-
-	}
-
-	public void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
-		this.processingUnit = processingUnit;
-	}
-
-	public String getCoreName() {
-		return coreName;
-	}
-
-	public void setCoreName(String coreName) {
-		this.coreName = coreName;
-	}
-
-	@Override
-	public String toString() {
-		return coreName;
 	}
 }

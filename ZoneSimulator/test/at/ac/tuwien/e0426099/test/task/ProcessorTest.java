@@ -48,7 +48,8 @@ public class ProcessorTest {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		log.info("========================================================");
+
+        log.info(GodClass.instance().getCompleteStatus(true));
 	}
 
 

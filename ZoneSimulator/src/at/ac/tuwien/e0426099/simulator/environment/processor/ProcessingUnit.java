@@ -9,6 +9,7 @@ import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManage
 import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
+import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -53,22 +54,6 @@ public class ProcessingUnit implements ProcessingUnitListener {
 		scheduleTasks();
 	}
 
-	@Override
-	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		log.debug(getLogRef()+"task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
-		memoryCallBack.onSubTaskAdded(subTaskId);
-		finnishedSubTasks.add(subTaskId);
-		scheduleTasks();
-		platformCallBack.onTaskFinished(c,subTaskId);
-	}
-
-	@Override
-	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
-		failedSubTasks.add(subTaskId);
-		scheduleTasks();
-		platformCallBack.onTaskFailed(c, subTaskId);
-	}
-
 	public List<SubTaskId> getFinnishedSubTasks() {
 		return finnishedSubTasks;
 	}
@@ -88,6 +73,44 @@ public class ProcessingUnit implements ProcessingUnitListener {
 	public void setPlatformCallBack(ProcessingUnitListener platformCallBack) {
 		this.platformCallBack = platformCallBack;
 	}
+
+    public synchronized String getCompleteStatus(boolean detailed) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(LogUtil.BR+LogUtil.h3("CPU "+getLogRef()));
+        for(ProcessingCore core:cores) {
+            sb.append(core.getCompleteStatus(detailed) + LogUtil.BR);
+        }
+        sb.append(LogUtil.BR +LogUtil.h3("Finished Subtasks"));
+        sb.append(LogUtil.emptyListText(finnishedSubTasks," - no tasks -"));
+        for(SubTaskId id:finnishedSubTasks) {
+            sb.append(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+        }
+
+        sb.append(LogUtil.BR +LogUtil.h3("Failed Subtasks"));
+        sb.append(LogUtil.emptyListText(failedSubTasks," - no tasks -"));
+        for(SubTaskId id:failedSubTasks) {
+            sb.append(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+        }
+        return sb.toString();
+    }
+
+    /* ********************************************************************************** CALLBACKS */
+
+    @Override
+    public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+        log.debug(getLogRef()+"task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
+        memoryCallBack.onSubTaskAdded(subTaskId);
+        finnishedSubTasks.add(subTaskId);
+        scheduleTasks();
+        platformCallBack.onTaskFinished(c,subTaskId);
+    }
+
+    @Override
+    public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+        failedSubTasks.add(subTaskId);
+        scheduleTasks();
+        platformCallBack.onTaskFailed(c, subTaskId);
+    }
 
 	/* ********************************************************************************** PRIVATES */
 

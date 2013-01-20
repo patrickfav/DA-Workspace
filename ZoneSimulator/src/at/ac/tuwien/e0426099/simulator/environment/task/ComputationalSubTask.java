@@ -13,6 +13,7 @@ import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.thread.ExecutionRunnable;
 import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
 import at.ac.tuwien.e0426099.simulator.exceptions.RunOnIllegalStateException;
+import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -101,7 +102,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			setStatus(SubTaskStatus.RUNNING);
 			futureRefForThread = GodClass.instance().getPlatform(platformId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
 		} else {
-			throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+getFullReadableID());
+			throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+ getLogRef());
 		}
 		aquireSempahore(startStopSemaphore,"startStopRun()");
 		releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
@@ -127,59 +128,6 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		}
 	}
 
-	@Override
-	public void setProcessingHandicap(double percentage) {
-		processingHandicap = percentage;
-	}
-
-	@Override
-	public RawProcessingPower getCurrentlyAssignedProcessingPower() {
-		return availableProcPower;
-	}
-
-	@Override
-	public SubTaskStatus getStatus() {
-		return status;
-	}
-
-	@Override
-	public TaskType getTaskType() {
-		return type;
-	}
-
-	@Override
-	public ProcessingRequirements getProcessingRequirements() {
-		return requirements;
-	}
-
-	@Override
-	public MemoryAmount getMemoryDemand() {
-		return memoryDemand;
-	}
-
-	@Override
-	public void addTaskListener(ITaskListener listener) {
-		listeners.add(listener);
-	}
-
-
-	@Override
-	public String toString() {
-		return getFullReadableID();
-	}
-
-	@Override
-	public void waitForTaskToFinish() {
-		if(futureRefForThread != null) {
-			try {
-				futureRefForThread.get();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
 	/* ***************************************************************************** CALLBACKS FROM THREAD */
 
 	@Override
@@ -188,7 +136,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		try {
 			timeToSleep = taskWorkManager.startProcessing(new Date(),availableProcPower);
 		} catch (CantStartException e) {
-			throw new RunOnIllegalStateException("Trying to start while still running (Status: "+status+") in task "+getFullReadableID());
+			throw new RunOnIllegalStateException("Trying to start while still running (Status: "+status+") in task "+ getLogRef());
 		}
 		logMsgInfo("Start task. Estimated time to finish: " + timeToSleep+"ms");
 		releaseSempahore(startStopSemaphore,"startStopExecRun");
@@ -227,11 +175,82 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		taskWorkManager.stopCurrentProcessing();
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
-		log.error(getFullReadableID()+": "+"Exception thrown while executing Thread",e);
+		log.error(getLogRef()+": "+"Exception thrown while executing Thread",e);
 		releaseSempahore(startStopSemaphore,"startStopExecException");
 		callAllListenerFailed();
 
 	}
+
+    /* ***************************************************************************** GETTER N SETTER */
+
+    @Override
+    public void setProcessingHandicap(double percentage) {
+        processingHandicap = percentage;
+    }
+
+    @Override
+    public RawProcessingPower getCurrentlyAssignedProcessingPower() {
+        return availableProcPower;
+    }
+
+    @Override
+    public SubTaskStatus getStatus() {
+        return status;
+    }
+
+    @Override
+    public TaskType getTaskType() {
+        return type;
+    }
+
+    @Override
+    public ProcessingRequirements getProcessingRequirements() {
+        return requirements;
+    }
+
+    @Override
+    public MemoryAmount getMemoryDemand() {
+        return memoryDemand;
+    }
+
+    @Override
+    public void addTaskListener(ITaskListener listener) {
+        listeners.add(listener);
+    }
+
+
+    @Override
+    public String toString() {
+        return getLogRef();
+    }
+
+    @Override
+    @Deprecated
+    public void waitForTaskToFinish() {
+        if(futureRefForThread != null) {
+            try {
+                futureRefForThread.get();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public synchronized String getCompleteStatus(boolean detailed) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(LogUtil.TAB+getLogRef());
+        sb.append(LogUtil.TAB+" (Status: "+status+", Needed Memory: "+memoryDemand+", ProcReqs: "+requirements+ LogUtil.BR);
+        sb.append(LogUtil.TAB+LogUtil.TAB+"Summary: Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms, Overall: "+String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms"+ LogUtil.BR);
+
+        if(detailed)
+            for(int i=0; i< taskWorkManager.getProcessingSlices().size();i++) {
+                sb.append(LogUtil.TAB+LogUtil.TAB+LogUtil.TAB+" Processingslice "+(i+1)+": "+taskWorkManager.getProcessingSlices().get(i)+ LogUtil.BR);
+            }
+
+        return sb.toString();
+    }
 
 	/* ***************************************************************************** PRIVATES */
 
@@ -239,7 +258,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		logMsgVerbose("interrupt called");
 		if(futureRefForThread != null) {
 			if(!futureRefForThread.cancel(true)) {
-				releaseSempahore(startStopSemaphore,"startStopInterrupt"); //release if it cant be canceld, since it would never get to callbacks
+				releaseSempahore(startStopSemaphore,"startStopInterrupt"); //release if it cant be canceled, since it would never get to callbacks
 			}
 		}
 		futureRefForThread =null; //can only interrupt once
@@ -248,26 +267,6 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	private synchronized void setStatus(SubTaskStatus t) {
 		logMsgDebug("Status change from "+status+" to " + t);
 		status = t;
-	}
-
-	private void logMsgWarn(String msg) {
-		log.warn(getFullReadableID()+": "+msg);
-	}
-	private void logMsgVerbose(String msg) {
-		if(GodClass.VERBOSE_LOG_MODE)
-			log.debug(getFullReadableID()+": "+msg);
-	}
-
-	private void logMsgDebug(String msg) {
-		log.debug(getFullReadableID()+": "+msg);
-	}
-
-	private void logMsgInfo(String msg) {
-		log.info(getFullReadableID()+": "+msg);
-	}
-
-	private String getFullReadableID() {
-		return "["+platformId+"|ST|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"]";
 	}
 
 	private void callAllListenerFinished() {
@@ -295,4 +294,28 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		logMsgVerbose("Release semaphore: "+msg);
 		s.release();
 	}
+
+    /* LOGGING */
+
+    private void logMsgWarn(String msg) {
+        log.warn(getLogRef()+": "+msg);
+    }
+    private void logMsgVerbose(String msg) {
+        if(GodClass.VERBOSE_LOG_MODE)
+            log.debug(getLogRef()+": "+msg);
+    }
+
+    private void logMsgDebug(String msg) {
+        log.debug(getLogRef()+": "+msg);
+    }
+
+    private void logMsgInfo(String msg) {
+        log.info(getLogRef()+": "+msg);
+    }
+
+    private String getLogRef() {
+        return "["+platformId+"|"+type+"|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"]";
+    }
+
+
 }

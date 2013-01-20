@@ -1,6 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment;
 
 import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,4 +37,14 @@ public class GodClass {
 		platforms.put(id.getId(),new Platform(id,unit));
 		return id;
 	}
+
+    public synchronized String getCompleteStatus(boolean detailed) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(LogUtil.BR+LogUtil.BR+LogUtil.h1("Complete Status:"));
+        for(Platform p:platforms.values()) {
+            sb.append(p.getCompleteStatus(detailed));
+        }
+        sb.append(LogUtil.HR1+ LogUtil.BR);
+        return sb.toString();
+    }
 }

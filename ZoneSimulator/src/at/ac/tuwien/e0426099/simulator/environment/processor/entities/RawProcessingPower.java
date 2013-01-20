@@ -49,4 +49,9 @@ public class RawProcessingPower {
 
 		return 0;
 	}
+
+    @Override
+    public String toString() {
+        return String.valueOf(computationsPerMs)+" cycles-per-ms";    //To change body of overridden methods use File | Settings | File Templates.
+    }
 }

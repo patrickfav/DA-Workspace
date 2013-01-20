@@ -5,6 +5,7 @@ import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcess
 import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -14,13 +15,12 @@ import java.util.List;
  */
 public class TaskWorkManager {
 	private ProcessingRequirements processingRequirements;
-	private RawProcessingPower currentProcessingPower;
 	private List<ProcessingSlice> processingSlices;
 	private long computationsLeftToDo;
 
 	public TaskWorkManager(ProcessingRequirements processingRequirements) {
 		this.processingRequirements = processingRequirements;
-		processingSlices = new ArrayList<ProcessingSlice>();
+		processingSlices = Collections.synchronizedList(new ArrayList<ProcessingSlice>());
 		computationsLeftToDo = processingRequirements.getComputationNeedForCompletion();
 	}
 
@@ -78,5 +78,9 @@ public class TaskWorkManager {
 		return null;
 	}
 
-	/* ***************************************************************************** PRIVATES */
+    public List<ProcessingSlice> getProcessingSlices() {
+        return processingSlices;
+    }
+
+    /* ***************************************************************************** PRIVATES */
 }

@@ -69,4 +69,14 @@ public class ProcessingSlice {
 	public Date getEndTime() {
 		return endTime;
 	}
+
+    @Override
+    public String toString() {
+        if(isStillProcessing()) {
+            return "StartTime: "+startTime.getTime()+"/ProcPower:"+givenProcessingPower+"/CyclesTodo: "+computationsNeededToDo;
+        } else  {
+            return "Duration: "+getActualTimeSpendOnComputation()+" ms/ProcPower: "+givenProcessingPower+"/CyclesTodo: "+computationsNeededToDo;
+        }
+
+    }
 }

@@ -29,4 +29,5 @@ public interface ISubTask {
 	public void addTaskListener(ITaskListener listener);
 
 	public void waitForTaskToFinish();
+    public String getCompleteStatus(boolean detailed);
 }
