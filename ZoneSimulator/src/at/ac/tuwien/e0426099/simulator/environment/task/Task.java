@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
@@ -56,7 +56,7 @@ public class Task implements ITask{
 	}
 	@Override
 	public boolean subTasksLeftToDo() {
-		if(GodClass.VERBOSE_LOG_MODE)
+		if(G.VERBOSE_LOG_MODE)
 			log.debug(getLogRef()+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
 
 		if(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()) {
@@ -103,7 +103,7 @@ public class Task implements ITask{
 		}
 	}
 
-	@Override
+	/*@Override
 	public void blockWaitUntilFinished() {
 		for (UUID id : subTaskOrder) {
 			if(subTasks.get(id).getStatus() == ISubTask.SubTaskStatus.RUNNING) {
@@ -114,7 +114,18 @@ public class Task implements ITask{
 				}
 			}
 		}
-	}
+	}*/
+
+    @Override
+    public boolean isFinishedExecuting() {
+        return status == TaskStatus.FINISHED || status == TaskStatus.ERROR;
+    }
+
+    @Override
+    public String toString() {
+        return  readAbleName+"/" + id.toString().substring(0,5)+" (status=" + status+")";
+    }
+    /* ***************************************************************************** PRIVATES */
 
 	private void setStatus(TaskStatus newStatus) {
 		log.debug(getLogRef() + "Set status from " + status + " to " + newStatus);
@@ -125,8 +136,5 @@ public class Task implements ITask{
 		return "["+platformId+"|Task|"+readAbleName+"]: ";
 	}
 
-	@Override
-	public String toString() {
-		return  readAbleName+"/" + id.toString().substring(0,5)+" (status=" + status+")";
-	}
+
 }

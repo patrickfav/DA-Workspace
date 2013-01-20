@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
@@ -97,15 +97,19 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	@Override
 	public synchronized void run() {
-		aquireSempahore(checkOnFinishSemaphore,"checkFinishRun()");
-		if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
-			setStatus(SubTaskStatus.RUNNING);
-			futureRefForThread = GodClass.instance().getPlatform(platformId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
-		} else {
-			throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+ getLogRef());
-		}
-		aquireSempahore(startStopSemaphore,"startStopRun()");
-		releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
+        if(status == SubTaskStatus.FINISHED) {
+            logMsgWarn("This seems to be a conccurrent error, nothing to worry about that much: try to run in FINISH state. The run attempt will be ignored.");
+        } else {
+            aquireSempahore(checkOnFinishSemaphore,"checkFinishRun()");
+            if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
+                setStatus(SubTaskStatus.RUNNING);
+                futureRefForThread = G.get().getPlatform(platformId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
+            } else {
+                throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+ getLogRef());
+            }
+            aquireSempahore(startStopSemaphore,"startStopRun()");
+            releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
+        }
 	}
 
 	@Override
@@ -281,13 +285,9 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	private void aquireSempahore(Semaphore s, String msg) {
-		try {
-			logMsgVerbose("Start acquiring semaphore: "+msg);
-			s.acquire();
-			logMsgVerbose("Done acquiring "+msg);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+        logMsgVerbose("Start acquiring semaphore: "+msg);
+        s.acquireUninterruptibly();
+        logMsgVerbose("Done acquiring "+msg);
 	}
 
 	private void releaseSempahore(Semaphore s, String msg) {
@@ -301,7 +301,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
         log.warn(getLogRef()+": "+msg);
     }
     private void logMsgVerbose(String msg) {
-        if(GodClass.VERBOSE_LOG_MODE)
+        if(G.VERBOSE_LOG_MODE)
             log.debug(getLogRef()+": "+msg);
     }
 

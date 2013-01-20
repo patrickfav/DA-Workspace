@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.test.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
@@ -44,12 +44,12 @@ public class ProcessorTest {
 	@After
 	public void tearDown() {
 		try {
-			Thread.sleep(30 * 1000);
+			Thread.sleep(10 * 1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
-        log.info(GodClass.instance().getCompleteStatus(true));
+        log.info(G.get().getCompleteStatus(true));
 	}
 
 
@@ -65,7 +65,7 @@ public class ProcessorTest {
 
 		ProcessingUnit unit = new ProcessingUnit(new FifoLeastLoadScheduler(),memory,cores);
 
-		PlatformId id = GodClass.instance().addPlatform("local",unit);
+		PlatformId id = G.get().addPlatform("local",unit);
 
 		ITask task1 = new Task("No1");
 
@@ -77,7 +77,7 @@ public class ProcessorTest {
 		task2.addSubTask(subTask2);
 		task2.addSubTask(subTask5);
 
-		GodClass.instance().getPlatform(id).addTask(task1);
-		GodClass.instance().getPlatform(id).addTask(task2);
+		G.get().getPlatform(id).addTask(task1);
+		G.get().getPlatform(id).addTask(task2);
 	}
 }

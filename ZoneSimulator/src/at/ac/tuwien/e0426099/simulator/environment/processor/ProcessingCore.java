@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.processor;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
@@ -24,7 +24,7 @@ import java.util.UUID;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemoryListener {
+public class ProcessingCore extends Thread implements ITaskListener,WorkingMemory.ChangedMemoryListener {
 	private Logger log = LogManager.getLogger(ProcessingCore.class.getName());
 
 	private UUID id;
@@ -49,10 +49,10 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 
 	public synchronized void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
 		log.debug(getLogRef() + "Add task " + subTaskId);
-		GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
+		G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
-			throw new TooMuchConcurrentTasksException("Cannot add this task "+GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getReadAbleName()+
+			throw new TooMuchConcurrentTasksException("Cannot add this task "+ G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
 			pauseAllUnfinishedTasks();
@@ -80,7 +80,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	public synchronized double getLoad() {
 		long sum = 0;
 		for(SubTaskId t: currentRunningTasks) {
-			sum += GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
+			sum += G.get().getPlatform(platformId).getSubTaskForProcessor(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
 		}
 		return rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)) / (double) sum;
 	}
@@ -90,7 +90,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 	}
 
 
-    public int getMaxConcurrentTasks() {
+    public synchronized int getMaxConcurrentTasks() {
         return maxConcurrentTasks;
     }
 
@@ -98,11 +98,11 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		return id;
 	}
 
-	public void setPlatformId(PlatformId platformId) {
+	public synchronized void setPlatformId(PlatformId platformId) {
 		this.platformId = platformId;
 	}
 
-    public void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
+    public synchronized void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
         this.processingUnit = processingUnit;
     }
 
@@ -126,7 +126,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
         sb.append("Current Running Tasks:" +LogUtil.BR);
         sb.append(LogUtil.emptyListText(currentRunningTasks," - no tasks -"));
         for(SubTaskId id:currentRunningTasks) {
-            sb.append(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+            sb.append(G.get().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
         }
         return sb.toString();
     }
@@ -147,7 +147,7 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
     public synchronized void onTaskFailed(SubTaskId subTaskId) {
         pauseAllUnfinishedTasks();
         log.debug(getLogRef() + "Failed task " + subTaskId + " removed");
-        currentRunningTasks.remove(subTaskId); //removed finished task
+        currentRunningTasks.remove(subTaskId); //removed failed task
         reBalanceTasks();
         runAllTasks();
         processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
@@ -183,22 +183,22 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		double maxProcPwrPerTask =  currentProcPwrP/currentRunningTasks.size(); //fairly shared resources
 
 		for(int i=0; i<currentRunningTasks.size(); i++) {
-			if(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
-				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
-				GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
+			if(G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
+				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
+				G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
 				maxProcPwrPerTask += procPwrThatCanBeSharedAgain/(currentRunningTasks.size()-i+1); //divide upon remaining tasks
 			} else {
-				GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
+				G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
 			}
 		}
 	}
 
 	private synchronized void pauseAllUnfinishedTasks() {
 		for(SubTaskId t: currentRunningTasks) {
-			if(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
+			if(G.get().getPlatform(platformId).getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
 				log.debug(getLogRef()+"Pause Task "+t+".");
-				GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).pause();
-				//GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).waitForPause();
+				G.get().getPlatform(platformId).getSubTaskForProcessor(t).pause();
+				//G.get().getPlatform(platformId).getSubTaskForProcessor(t).waitForPause();
 			}
 		}
 	}
@@ -207,8 +207,8 @@ public class ProcessingCore implements ITaskListener,WorkingMemory.ChangedMemory
 		for(SubTaskId t: currentRunningTasks) {
 			log.debug(getLogRef()+"Run Task "+t+".");
 			try {
-				GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).run();
-				//GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(t).waitForStartedRunning();
+				G.get().getPlatform(platformId).getSubTaskForProcessor(t).run();
+				//G.get().getPlatform(platformId).getSubTaskForProcessor(t).waitForStartedRunning();
 			} catch (Exception e) {
 				log.error(getLogRef()+"Exception caught while trying to run all tasks",e);
 			}

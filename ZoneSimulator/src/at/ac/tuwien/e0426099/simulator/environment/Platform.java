@@ -37,90 +37,95 @@ public class Platform implements ProcessingUnitListener {
 		processingUnit = unit;
 		processingUnit.setPlatformId(platformId);
 		processingUnit.setPlatformCallBack(this);
-		//processingUnit.start();
+		processingUnit.start();
 	}
 
 
-	public void addTask(ITask task) {
+	public synchronized void addTask(ITask task) {
 		task.setPlatformId(platformId);
 		log.info(this+" Add new Task: "+task);
 		taskMap.put(task.getId(),task);
 		dispatcher(task);
 	}
 
-	public ITask getTask(UUID id) {
-		return taskMap.get(id);
-	}
-
 	public IComputationalSubTask getSubTaskForProcessor(SubTaskId subTaskId) {
 		return (IComputationalSubTask) taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
-	}
-
-	public ISubTask getSubTask(SubTaskId subTaskId) {
-		return taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
 	}
 
 	public synchronized ExecutorService getThreadPool() {
 		return threadPool;
 	}
 
-	private boolean dispatcher(ITask task) {
-		if(task.subTasksLeftToDo()) {
-			log.debug(this+" Start dispatcher with Task "+task);
-			ISubTask subTask = task.getNextSubTask();
-
-			if(subTask.getTaskType() == ISubTask.TaskType.PROCESSING) {
-				log.debug(this+" Dispatching to Processor");
-				processingUnit.addTask(subTask.getSubTaskId());
-				return true;
-			} else if(subTask.getTaskType() == ISubTask.TaskType.NETWORK_IO){
-				log.debug(this+" Dispatching to Network");
-				return true;
-			} else if(subTask.getTaskType() == ISubTask.TaskType.DISK_IO){
-				log.debug(this+" Dispatching to Disk");
-				return true;
-			}
-		}
-		log.debug(this+" No more subtasks to dispatch in task.");
-		return false;
-	}
-
-	@Override
-	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		dispatchTasks(subTaskId);
-	}
-
-	@Override
-	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
-		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
-		dispatchTasks(subTaskId);
-	}
-
-	private void dispatchTasks(SubTaskId subTaskId) {
-		if(!dispatcher(taskMap.get(subTaskId.getParentTaskId()))) {
-			/*log.debug(this+" Waiting for tasks to finish...");
-			/*for(ITask task:taskMap.values()) {
-				task.blockWaitUntilFinished();
-
-			}
-			try {
-				threadPool.awaitTermination(20, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}*/
-			//log.debug(this+" Nothing more to dispatch right now.");
-		}
-	}
-
-	@Override
-	public String toString() {
-		return "[Platform|"+ platformId +"]";
-	}
+    @Override
+    public String toString() {
+        return "[Platform|"+ platformId +"]";
+    }
 
     public synchronized String getCompleteStatus(boolean detailed) {
         StringBuffer sb = new StringBuffer();
         sb.append(LogUtil.BR+LogUtil.h2("Platform: "+this));
         sb.append(processingUnit.getCompleteStatus(detailed));
         return sb.toString();
+    }
+
+
+     /* ********************************************************************************** CALLBACKS */
+
+	@Override
+	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+		dispatchTasks(subTaskId);
+	}
+
+	@Override
+	public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
+		dispatchTasks(subTaskId);
+	}
+
+
+    /* ********************************************************************************** PRIVATES */
+
+    /**
+     * Dispatches next subtask form given task to the correct handler
+     * @param task
+     * @return true if there was something to dispatch, or false otherwise
+     */
+    private boolean dispatcher(ITask task) {
+        if(task.subTasksLeftToDo()) {
+            log.debug(this+" Start dispatcher with Task "+task);
+            ISubTask subTask = task.getNextSubTask();
+
+            if(subTask.getTaskType() == ISubTask.TaskType.PROCESSING) {
+                log.debug(this+" Dispatching to Processor");
+                processingUnit.addTask(subTask.getSubTaskId());
+                return true;
+            } else if(subTask.getTaskType() == ISubTask.TaskType.NETWORK_IO){
+                log.debug(this+" Dispatching to Network");
+                return true;
+            } else if(subTask.getTaskType() == ISubTask.TaskType.DISK_IO){
+                log.debug(this+" Dispatching to Disk");
+                return true;
+            }
+        }
+        log.debug(this+" No more subtasks to dispatch in task.");
+        return false;
+    }
+
+    private void dispatchTasks(SubTaskId subTaskId) {
+        if(dispatcher(taskMap.get(subTaskId.getParentTaskId())) || checkIfThereWillBeAnyWork()) {
+            log.debug(this+" [Sync] Waiting for other tasks to finish");
+            G.get().getWaitForTasksToFinish().acquireUninterruptibly();
+            log.debug(this+" [Sync] Something happend (finish/fail). Resume execution.");
+        } else {
+            log.debug(this+" All done.");
+        }
+    }
+
+    private synchronized boolean checkIfThereWillBeAnyWork() {
+        boolean isDone = true;
+        for(ITask task: taskMap.values()) {
+            isDone &= task.isFinishedExecuting();
+        }
+        return !isDone;
     }
 }

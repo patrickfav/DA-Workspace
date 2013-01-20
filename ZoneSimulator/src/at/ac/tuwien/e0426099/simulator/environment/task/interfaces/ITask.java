@@ -23,6 +23,12 @@ public interface ITask {
 	public TaskStatus getTaskStatus();
 	public void registerFailedSubTask(UUID subTaskId);
 
-	public void blockWaitUntilFinished();
 
+    /**
+     * Returns true if this task has finished its exection,
+     * either if its finished or in error mode.
+     *
+     * @return
+     */
+    public boolean isFinishedExecuting();
 }

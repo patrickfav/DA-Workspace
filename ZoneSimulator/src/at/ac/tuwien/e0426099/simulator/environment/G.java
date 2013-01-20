@@ -5,25 +5,28 @@ import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author PatrickF
  * @since 18.01.13
  */
-public class GodClass {
+public class G {
 	public static final boolean VERBOSE_LOG_MODE = true;
 
 	private ConcurrentHashMap<UUID,Platform> platforms;
+    private Semaphore waitForTasksToFinish;
 
-	private static GodClass instance;
+	private static G instance;
 
-	private GodClass() {
+	private G() {
 		platforms= new ConcurrentHashMap<UUID, Platform>();
+        waitForTasksToFinish=new Semaphore(0,true);
 	}
 
-	public static GodClass instance() {
+	public static G get() {
 		if(instance == null) {
-			instance = new GodClass();
+			instance = new G();
 		}
 		return instance;
 	}
@@ -46,5 +49,9 @@ public class GodClass {
         }
         sb.append(LogUtil.HR1+ LogUtil.BR);
         return sb.toString();
+    }
+
+    public Semaphore getWaitForTasksToFinish() {
+        return waitForTasksToFinish;
     }
 }

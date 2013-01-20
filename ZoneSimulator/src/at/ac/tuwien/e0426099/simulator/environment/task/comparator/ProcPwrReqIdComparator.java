@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
@@ -19,7 +19,7 @@ public class ProcPwrReqIdComparator implements Comparator<SubTaskId> {
 
 	@Override
 	public int compare(SubTaskId o1, SubTaskId o2) {
-		return new Long(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs())
-				.compareTo(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
+		return new Long(G.get().getPlatform(platformId).getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs())
+				.compareTo(G.get().getPlatform(platformId).getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
 	}
 }

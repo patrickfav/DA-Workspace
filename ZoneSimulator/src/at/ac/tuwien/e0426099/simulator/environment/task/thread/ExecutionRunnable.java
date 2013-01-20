@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.thread;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ExecutionCallback;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -25,7 +25,7 @@ public class ExecutionRunnable implements Runnable{
 	public void run() {
 		try {
 			executionCallback.onExecRun();
-			if(GodClass.VERBOSE_LOG_MODE)
+			if(G.VERBOSE_LOG_MODE)
 				log.debug("Thread start sleep "+timeToExecute);
 			Thread.sleep(Math.max(0,timeToExecute));
 			executionCallback.onExecFinished();

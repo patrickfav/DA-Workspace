@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.memory;
 
-import at.ac.tuwien.e0426099.simulator.environment.GodClass;
+import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.memory.entities.TaskInMemory;
@@ -68,18 +68,18 @@ public class WorkingMemory implements TaskManagementMemoryListener {
 	private void addSubTask(SubTaskId subTaskId) {
 		TaskInMemory tim;
 		if(getFreeMemory().getAmountInKiloByte() > 0) { //has some free mem to give
-			if(getFreeMemory().getAmountInKiloByte() >= GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
-				tim = new TaskInMemory(platformId,subTaskId, GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
+			if(getFreeMemory().getAmountInKiloByte() >= G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
+				tim = new TaskInMemory(platformId,subTaskId, G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
 			} else { //can only assign the rest of free mem
 				tim = new TaskInMemory(platformId,subTaskId,getFreeMemory(),
-						new MemoryAmount(GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
+						new MemoryAmount(G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
 			}
 		} else { //no memory to give
-			tim = new TaskInMemory(platformId,subTaskId,new MemoryAmount(0), GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand());
+			tim = new TaskInMemory(platformId,subTaskId,new MemoryAmount(0), G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand());
 		}
 		tim.markChanged();
 		taskInMemoryList.add(tim);
-		GodClass.instance().getPlatform(platformId).getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
+		G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
 	}
 
 	private synchronized MemoryAmount getUsedMemory() {
