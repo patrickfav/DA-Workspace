@@ -1,5 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment;
 
+import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingCore;
 import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
 import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
@@ -11,7 +12,6 @@ import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -19,40 +19,29 @@ import java.util.concurrent.*;
  * @author PatrickF
  * @since 08.12.12
  */
-public class Platform extends Thread implements ProcessingUnitListener {
+public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitListener {
 	private Logger log = LogManager.getLogger(Platform.class.getName());
-	private final Object lock = new Object();
 
 	private PlatformId platformId;
 	private ExecutorService threadPool;
 	private ConcurrentHashMap<UUID, ITask> taskMap;
-
 	private ProcessingUnit processingUnit;
-	private Queue<UUID> taskQueue;
-	private Semaphore checkForWork;
-	private boolean isOnPause;
-
 
 	public Platform(PlatformId platformId, ProcessingUnit unit) {
-		this.platformId = platformId;
+        this.platformId = platformId;
 		taskMap = new ConcurrentHashMap<UUID, ITask>();
 		threadPool = Executors.newCachedThreadPool();
-		taskQueue = new ConcurrentLinkedQueue<UUID>();
-		checkForWork = new Semaphore(1, true);
 		processingUnit = unit;
-		isOnPause = false;
 		processingUnit.setPlatformId(platformId);
 		processingUnit.setPlatformCallBack(this);
 		processingUnit.start();
 	}
 
-
 	public synchronized void addTask(ITask task) {
 		task.setPlatformId(platformId);
 		log.info(this + " Add new Task: " + task);
 		taskMap.put(task.getId(), task);
-		taskQueue.add(task.getId());
-		checkForWork.release();
+        addToWorkerQueue(task.getId());
 	}
 
 	public IComputationalSubTask getSubTaskForProcessor(SubTaskId subTaskId) {
@@ -75,66 +64,33 @@ public class Platform extends Thread implements ProcessingUnitListener {
 		return sb.toString();
 	}
 
-    /* ********************************************************************************** RUN/PAUSE/STOP */
+    /* ********************************************************************************** THREAD ABSTRACT IMPL*/
 
-	@Override
-	public void run() {
-		while (checkIfThereWillBeAnyWork()) {
-			if (isOnPause) {
-				synchronized (lock) {
-					try {
-                        log.debug(this + " [Sync] on pause");
-						lock.wait();
-                        log.debug(this + " [Sync] resuming");
-					} catch (InterruptedException e) {
-						//do nothing
-					}
-				}
-			}
-
-			log.debug(this + " [Sync] Wait for semaphore release");
-			checkForWork.acquireUninterruptibly();
-			log.debug(this + " [Sync] Something happend (finish/fail). Resume execution.");
-
-			log.debug(this + " [Sync] Starting to dispatch tasks in queue");
-			UUID id;
-			while ((id = taskQueue.poll()) != null) {
-				dispatcher(taskMap.get(id));
-			}
-			log.debug(this + " [Sync] Nothing more to dispatchWaiting for other tasks to finish");
-		}
-		log.debug(this + " All done.");
-	}
-
-    public void pause() {
-        isOnPause = true;
+    @Override
+    public void doTheWork(UUID input) {
+        if(taskMap.containsKey(input))
+            dispatcher(taskMap.get(input));
     }
 
-    public void resumeExec() {
-        if(isOnPause) {
-            isOnPause = false;
-            synchronized (lock){
-                lock.notifyAll();
-            }
-        } else {
-            log.warn("Trying to resume, but not in pause.");
+    @Override
+    public synchronized boolean checkIfThereWillBeAnyWork() {
+        boolean isDone = true;
+        for (ITask task : taskMap.values()) {
+            isDone &= task.isFinishedExecuting();
         }
-
+        return !isDone;
     }
-
-	/* ********************************************************************************** CALLBACKS */
+    /* ********************************************************************************** CALLBACKS */
 
 	@Override
 	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		taskQueue.add(subTaskId.getParentTaskId());
-		checkForWork.release();
+		addToWorkerQueue(subTaskId.getParentTaskId());
 	}
 
 	@Override
 	public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
 		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
-		taskQueue.add(subTaskId.getParentTaskId());
-		checkForWork.release();
+        addToWorkerQueue(subTaskId.getParentTaskId());
 	}
 
 
@@ -167,11 +123,5 @@ public class Platform extends Thread implements ProcessingUnitListener {
 		return false;
 	}
 
-	private synchronized boolean checkIfThereWillBeAnyWork() {
-		boolean isDone = true;
-		for (ITask task : taskMap.values()) {
-			isDone &= task.isFinishedExecuting();
-		}
-		return !isDone;
-	}
+
 }

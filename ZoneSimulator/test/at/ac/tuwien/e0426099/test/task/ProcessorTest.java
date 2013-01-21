@@ -43,13 +43,7 @@ public class ProcessorTest {
 
 	@After
 	public void tearDown() {
-		/*try {
-			Thread.sleep(10 * 1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 
-        log.info(G.get().getCompleteStatus(true));*/
 	}
 
 
@@ -82,7 +76,7 @@ public class ProcessorTest {
 
         G.get().start();
 
-        try {
+        /*try {
             Thread.sleep(2 * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -97,7 +91,7 @@ public class ProcessorTest {
             e.printStackTrace();
         }
 
-        G.get().resume();
+        G.get().resume();*/
         G.get().waitForFinish();
 
 
