@@ -95,7 +95,6 @@ public class ProcessingUnit extends Thread implements ProcessingUnitListener {
         memoryCallBack.onSubTaskAdded(subTaskId);
         finnishedSubTasks.add(subTaskId);
         scheduleTasks();
-        G.get().getWaitForTasksToFinish().release();
         platformCallBack.onTaskFinished(c,subTaskId);
     }
 
@@ -103,7 +102,6 @@ public class ProcessingUnit extends Thread implements ProcessingUnitListener {
     public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
         failedSubTasks.add(subTaskId);
         scheduleTasks();
-        G.get().getWaitForTasksToFinish().release();
         platformCallBack.onTaskFailed(c, subTaskId);
     }
 

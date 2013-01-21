@@ -11,30 +11,36 @@ import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * @author PatrickF
  * @since 08.12.12
  */
-public class Platform implements ProcessingUnitListener {
+public class Platform extends Thread implements ProcessingUnitListener {
 	private Logger log = LogManager.getLogger(Platform.class.getName());
+	private final Object lock = new Object();
 
 	private PlatformId platformId;
 	private ExecutorService threadPool;
-	private ConcurrentHashMap<UUID,ITask> taskMap;
+	private ConcurrentHashMap<UUID, ITask> taskMap;
 
 	private ProcessingUnit processingUnit;
+	private Queue<UUID> taskQueue;
+	private Semaphore checkForWork;
+	private boolean isOnPause;
 
 
 	public Platform(PlatformId platformId, ProcessingUnit unit) {
 		this.platformId = platformId;
-		taskMap = new ConcurrentHashMap<UUID,ITask>();
+		taskMap = new ConcurrentHashMap<UUID, ITask>();
 		threadPool = Executors.newCachedThreadPool();
+		taskQueue = new ConcurrentLinkedQueue<UUID>();
+		checkForWork = new Semaphore(1, true);
 		processingUnit = unit;
+		isOnPause = false;
 		processingUnit.setPlatformId(platformId);
 		processingUnit.setPlatformCallBack(this);
 		processingUnit.start();
@@ -43,9 +49,10 @@ public class Platform implements ProcessingUnitListener {
 
 	public synchronized void addTask(ITask task) {
 		task.setPlatformId(platformId);
-		log.info(this+" Add new Task: "+task);
-		taskMap.put(task.getId(),task);
-		dispatcher(task);
+		log.info(this + " Add new Task: " + task);
+		taskMap.put(task.getId(), task);
+		taskQueue.add(task.getId());
+		checkForWork.release();
 	}
 
 	public IComputationalSubTask getSubTaskForProcessor(SubTaskId subTaskId) {
@@ -53,79 +60,118 @@ public class Platform implements ProcessingUnitListener {
 	}
 
 	public synchronized ExecutorService getThreadPool() {
-		return threadPool;
+	    return threadPool;
 	}
 
-    @Override
-    public String toString() {
-        return "[Platform|"+ platformId +"]";
+	@Override
+	public String toString() {
+		return "[Platform|" + platformId + "]";
+	}
+
+	public synchronized String getCompleteStatus(boolean detailed) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(LogUtil.BR + LogUtil.h2("Platform: " + this));
+		sb.append(processingUnit.getCompleteStatus(detailed));
+		return sb.toString();
+	}
+
+    /* ********************************************************************************** RUN/PAUSE/STOP */
+
+	@Override
+	public void run() {
+		while (checkIfThereWillBeAnyWork()) {
+			if (isOnPause) {
+				synchronized (lock) {
+					try {
+                        log.debug(this + " [Sync] on pause");
+						lock.wait();
+                        log.debug(this + " [Sync] resuming");
+					} catch (InterruptedException e) {
+						//do nothing
+					}
+				}
+			}
+
+			log.debug(this + " [Sync] Wait for semaphore release");
+			checkForWork.acquireUninterruptibly();
+			log.debug(this + " [Sync] Something happend (finish/fail). Resume execution.");
+
+			log.debug(this + " [Sync] Starting to dispatch tasks in queue");
+			UUID id;
+			while ((id = taskQueue.poll()) != null) {
+				dispatcher(taskMap.get(id));
+			}
+			log.debug(this + " [Sync] Nothing more to dispatchWaiting for other tasks to finish");
+		}
+		log.debug(this + " All done.");
+	}
+
+    public void pause() {
+        isOnPause = true;
     }
 
-    public synchronized String getCompleteStatus(boolean detailed) {
-        StringBuffer sb = new StringBuffer();
-        sb.append(LogUtil.BR+LogUtil.h2("Platform: "+this));
-        sb.append(processingUnit.getCompleteStatus(detailed));
-        return sb.toString();
+    public void resumeExec() {
+        if(isOnPause) {
+            isOnPause = false;
+            synchronized (lock){
+                lock.notifyAll();
+            }
+        } else {
+            log.warn("Trying to resume, but not in pause.");
+        }
+
     }
 
-
-     /* ********************************************************************************** CALLBACKS */
+	/* ********************************************************************************** CALLBACKS */
 
 	@Override
 	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		dispatchTasks(subTaskId);
+		taskQueue.add(subTaskId.getParentTaskId());
+		checkForWork.release();
 	}
 
 	@Override
 	public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
 		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
-		dispatchTasks(subTaskId);
+		taskQueue.add(subTaskId.getParentTaskId());
+		checkForWork.release();
 	}
 
 
-    /* ********************************************************************************** PRIVATES */
+	/* ********************************************************************************** PRIVATES */
 
-    /**
-     * Dispatches next subtask form given task to the correct handler
-     * @param task
-     * @return true if there was something to dispatch, or false otherwise
-     */
-    private boolean dispatcher(ITask task) {
-        if(task.subTasksLeftToDo()) {
-            log.debug(this+" Start dispatcher with Task "+task);
-            ISubTask subTask = task.getNextSubTask();
+	/**
+	 * Dispatches next subtask form given task to the correct handler
+	 *
+	 * @param task
+	 * @return true if there was something to dispatch, or false otherwise
+	 */
+	private boolean dispatcher(ITask task) {
+		if (task.subTasksLeftToDo()) {
+			log.debug(this + " Start dispatcher with Task " + task);
+			ISubTask subTask = task.getNextSubTask();
 
-            if(subTask.getTaskType() == ISubTask.TaskType.PROCESSING) {
-                log.debug(this+" Dispatching to Processor");
-                processingUnit.addTask(subTask.getSubTaskId());
-                return true;
-            } else if(subTask.getTaskType() == ISubTask.TaskType.NETWORK_IO){
-                log.debug(this+" Dispatching to Network");
-                return true;
-            } else if(subTask.getTaskType() == ISubTask.TaskType.DISK_IO){
-                log.debug(this+" Dispatching to Disk");
-                return true;
-            }
-        }
-        log.debug(this+" No more subtasks to dispatch in task.");
-        return false;
-    }
+			if (subTask.getTaskType() == ISubTask.TaskType.PROCESSING) {
+				log.debug(this + " Dispatching to Processor");
+				processingUnit.addTask(subTask.getSubTaskId());
+				return true;
+			} else if (subTask.getTaskType() == ISubTask.TaskType.NETWORK_IO) {
+				log.debug(this + " Dispatching to Network");
+				return true;
+			} else if (subTask.getTaskType() == ISubTask.TaskType.DISK_IO) {
+				log.debug(this + " Dispatching to Disk");
+				return true;
+			}
+		}
+		log.debug(this + " No more subtasks to dispatch in task.");
+		return false;
+	}
 
-    private void dispatchTasks(SubTaskId subTaskId) {
-        if(dispatcher(taskMap.get(subTaskId.getParentTaskId())) || checkIfThereWillBeAnyWork()) {
-            log.debug(this+" [Sync] Waiting for other tasks to finish");
-            G.get().getWaitForTasksToFinish().acquireUninterruptibly();
-            log.debug(this+" [Sync] Something happend (finish/fail). Resume execution.");
-        } else {
-            log.debug(this+" All done.");
-        }
-    }
-
-    private synchronized boolean checkIfThereWillBeAnyWork() {
-        boolean isDone = true;
-        for(ITask task: taskMap.values()) {
-            isDone &= task.isFinishedExecuting();
-        }
-        return !isDone;
-    }
+	private synchronized boolean checkIfThereWillBeAnyWork() {
+		boolean isDone = true;
+		for (ITask task : taskMap.values()) {
+			isDone &= task.isFinishedExecuting();
+		}
+		return !isDone;
+	}
 }

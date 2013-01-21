@@ -43,13 +43,13 @@ public class ProcessorTest {
 
 	@After
 	public void tearDown() {
-		try {
+		/*try {
 			Thread.sleep(10 * 1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
-        log.info(G.get().getCompleteStatus(true));
+        log.info(G.get().getCompleteStatus(true));*/
 	}
 
 
@@ -79,5 +79,27 @@ public class ProcessorTest {
 
 		G.get().getPlatform(id).addTask(task1);
 		G.get().getPlatform(id).addTask(task2);
+
+        G.get().start();
+
+        try {
+            Thread.sleep(2 * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        G.get().pause();
+
+
+        try {
+            Thread.sleep(20 * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        G.get().resume();
+        G.get().waitForFinish();
+
+
 	}
 }

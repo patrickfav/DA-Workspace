@@ -245,8 +245,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
     public synchronized String getCompleteStatus(boolean detailed) {
         StringBuffer sb = new StringBuffer();
         sb.append(LogUtil.TAB+getLogRef());
-        sb.append(LogUtil.TAB+" (Status: "+status+", Needed Memory: "+memoryDemand+", ProcReqs: "+requirements+ LogUtil.BR);
-        sb.append(LogUtil.TAB+LogUtil.TAB+"Summary: Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms, Overall: "+String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms"+ LogUtil.BR);
+        sb.append(LogUtil.TAB+" Status: "+status+", Needed Memory: "+memoryDemand+", ProcReqs: "+requirements+ LogUtil.BR);
+        sb.append(LogUtil.TAB+LogUtil.TAB+"Summary: Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms, Overall: "+String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms, Min: "+requirements.getMinimumExecutionTimeMs()+" ms"+ LogUtil.BR);
 
         if(detailed)
             for(int i=0; i< taskWorkManager.getProcessingSlices().size();i++) {

@@ -2,6 +2,8 @@ package at.ac.tuwien.e0426099.simulator.environment;
 
 import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,15 +15,14 @@ import java.util.concurrent.Semaphore;
  */
 public class G {
 	public static final boolean VERBOSE_LOG_MODE = true;
+    private Logger log = LogManager.getLogger(G.class.getName());
 
 	private ConcurrentHashMap<UUID,Platform> platforms;
-    private Semaphore waitForTasksToFinish;
 
 	private static G instance;
 
 	private G() {
 		platforms= new ConcurrentHashMap<UUID, Platform>();
-        waitForTasksToFinish=new Semaphore(0,true);
 	}
 
 	public static G get() {
@@ -51,7 +52,29 @@ public class G {
         return sb.toString();
     }
 
-    public Semaphore getWaitForTasksToFinish() {
-        return waitForTasksToFinish;
+    public void start() {
+        for(Platform p:platforms.values()) {
+            p.start();
+        }
+    }
+
+    public void pause() {
+        for(Platform p:platforms.values()) {
+            p.pause();
+        }
+    }
+
+    public void resume() {
+        for(Platform p:platforms.values()) {
+            p.resumeExec();
+        }
+    }
+
+    public void waitForFinish() {
+        //wait for tasks to finish
+        for(Platform p:platforms.values()) {
+            try { p.join();} catch (InterruptedException e) {e.printStackTrace();}
+        }
+        log.info(getCompleteStatus(true));
     }
 }
