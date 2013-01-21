@@ -35,4 +35,9 @@ public class FifoLeastLoadScheduler implements IScheduler{
 		}
 		return null;
 	}
+
+    @Override
+    public boolean hasTaskLeftToSchedule() {
+        return !taskQueue.isEmpty();
+    }
 }

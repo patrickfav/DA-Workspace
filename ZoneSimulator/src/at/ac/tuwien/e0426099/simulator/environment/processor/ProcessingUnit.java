@@ -2,6 +2,7 @@ package at.ac.tuwien.e0426099.simulator.environment.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
@@ -20,7 +21,7 @@ import java.util.List;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingUnit extends Thread implements ProcessingUnitListener {
+public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements ProcessingUnitListener {
 	private Logger log = LogManager.getLogger(ProcessingUnit.class.getName());
 
 	private PlatformId platformId;
@@ -51,7 +52,7 @@ public class ProcessingUnit extends Thread implements ProcessingUnitListener {
 		log.debug(getLogRef()+"adding subtask to cpu "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		scheduler.addToQueue(subTaskId);
-		scheduleTasks();
+        addToWorkerQueue(subTaskId);
 	}
 
 	public synchronized void setPlatformId(PlatformId platformId) {
@@ -94,14 +95,14 @@ public class ProcessingUnit extends Thread implements ProcessingUnitListener {
         log.debug(getLogRef()+"task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
         memoryCallBack.onSubTaskAdded(subTaskId);
         finnishedSubTasks.add(subTaskId);
-        scheduleTasks();
+        addToWorkerQueue(subTaskId);
         platformCallBack.onTaskFinished(c,subTaskId);
     }
 
     @Override
     public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
         failedSubTasks.add(subTaskId);
-        scheduleTasks();
+        addToWorkerQueue(subTaskId);
         platformCallBack.onTaskFailed(c, subTaskId);
     }
 
@@ -143,4 +144,16 @@ public class ProcessingUnit extends Thread implements ProcessingUnitListener {
 	private String getLogRef(){
 		return "["+platformId+"|CPU]: ";
 	}
+
+    /* ********************************************************************************** THREAD ABSTRACT IMPL*/
+
+    @Override
+    public boolean checkIfThereWillBeAnyWork() {
+        return true;
+    }
+
+    @Override
+    public void doTheWork(SubTaskId input) {
+        scheduleTasks();
+    }
 }

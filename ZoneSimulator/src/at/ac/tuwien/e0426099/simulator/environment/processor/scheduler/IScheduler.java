@@ -13,4 +13,5 @@ import java.util.List;
 public interface IScheduler {
 	public void addToQueue(SubTaskId subTaskId);
 	public CoreDestination getNext(List<ProcessingCoreInfo> coreInfos);
+    public boolean hasTaskLeftToSchedule();
 }
