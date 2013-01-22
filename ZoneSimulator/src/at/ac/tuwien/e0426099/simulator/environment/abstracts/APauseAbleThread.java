@@ -43,12 +43,12 @@ public abstract class APauseAbleThread<T> extends Thread {
         log.debug(this + " All done.");
     }
 
-    public void pause() {
+    public synchronized void pause() {
 		log.debug(this + " [Sync] pause called");
         isOnPause = true;
     }
 
-    public void resumeExec() {
+    public synchronized void resumeExec() {
 		log.debug(this + " [Sync] resume called");
         if(isOnPause) {
             isOnPause = false;
@@ -58,21 +58,21 @@ public abstract class APauseAbleThread<T> extends Thread {
         }
     }
 
-	public void stopExec() {
+	public synchronized void stopExec() {
 		workSwitch = false;
 	}
 
-    public void addToWorkerQueue(T obj) {
+    public synchronized void addToWorkerQueue(T obj) {
         workerQueue.add(obj);
     }
 
-    public boolean checkIfThereWillBeAnyWork() {
+    public synchronized boolean checkIfThereWillBeAnyWork() {
 		return workSwitch;
 	}
     public abstract void doTheWork(T input);
 	public abstract void onAllDone();
 
-	public void waitForFinish() {
+	public synchronized void waitForFinish() {
 		log.debug(this+ " [Sync] wait for task to finish");
 		try {
 			join();

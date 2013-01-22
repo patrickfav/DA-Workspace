@@ -96,7 +96,7 @@ public class ProcessorTest2 {
 
 
         try {
-            Thread.sleep(20 * 1000);
+            Thread.sleep(1 * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -82,7 +82,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
     }
 
 	@Override
-	public void onAllDone() {
+	public synchronized void onAllDone() {
 		log.debug(this + " [Sync] all done callback, stop cpu");
 		processingUnit.stopExec();
 		processingUnit.interrupt(); //interrupt blocking queue
@@ -90,13 +90,13 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 	}
 
 	@Override
-	public void pause() {
+	public synchronized void pause() {
 		super.pause();
 		processingUnit.pause();
 	}
 
 	@Override
-	public void resumeExec() {
+	public synchronized void resumeExec() {
 		super.resumeExec();
 		processingUnit.resumeExec();
 	}

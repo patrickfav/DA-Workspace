@@ -57,18 +57,25 @@ public class G {
         for(Platform p:platforms.values()) {
             p.start();
         }
+		log.info(LogUtil.HR2);
+		log.info("START");
+		log.info(LogUtil.HR2);
     }
 
     public void pause() {
         for(Platform p:platforms.values()) {
             p.pause();
         }
+		log.info(LogUtil.HR2);
+		log.info("PAUSE");
     }
 
     public void resume() {
         for(Platform p:platforms.values()) {
             p.resumeExec();
         }
+		log.info("RESUME");
+		log.info(LogUtil.HR2);
     }
 
     public boolean waitForFinish() {

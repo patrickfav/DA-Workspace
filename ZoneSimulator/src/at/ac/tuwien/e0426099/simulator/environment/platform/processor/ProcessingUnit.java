@@ -118,7 +118,7 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 	}
 
 	@Override
-	public  void onAllDone() {
+	public void onAllDone() {
 		log.debug(this + " [Sync] all done callback, stop cores");
 		for(ProcessingCore c : cores) {
 			c.stopExec();
