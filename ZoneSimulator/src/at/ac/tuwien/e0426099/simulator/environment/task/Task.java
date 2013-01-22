@@ -41,10 +41,14 @@ public class Task implements ITask{
 
 	@Override
 	public ISubTask getNextSubTask() {
+		log.debug(getLogRef() +" get next subtask");
 		if(subTasksLeftToDo()) {
 			setStatus(TaskStatus.IN_PROGRESS);
-			return getSubTaskById(subTaskOrder.get(++currentSubTask));
+			ISubTask st = getSubTaskById(subTaskOrder.get(++currentSubTask));
+			log.debug(getLogRef() +" return next subtask: "+st);
+			return st;
 		}
+		log.debug(getLogRef() +" no more subtasks");
 		setStatus(TaskStatus.FINISHED);
 		return null;
 	}
@@ -103,19 +107,6 @@ public class Task implements ITask{
 		}
 	}
 
-	/*@Override
-	public void blockWaitUntilFinished() {
-		for (UUID id : subTaskOrder) {
-			if(subTasks.get(id).getStatus() == ISubTask.SubTaskStatus.RUNNING) {
-				try {
-					subTasks.get(id).waitForTaskToFinish();
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}*/
-
     @Override
     public boolean isFinishedExecuting() {
         return status == TaskStatus.FINISHED || status == TaskStatus.ERROR;
@@ -133,7 +124,7 @@ public class Task implements ITask{
 	}
 
 	private String getLogRef() {
-		return "["+platformId+"|Task|"+readAbleName+"]: ";
+		return "["+platformId+"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"]: ";
 	}
 
 

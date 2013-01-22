@@ -24,8 +24,8 @@ import java.util.List;
  * @author PatrickF
  * @since 13.12.12
  */
-public class ProcessorTest {
-	private Logger log = LogManager.getLogger(ProcessorTest.class.getName());
+public class ProcessorTest1 {
+	private Logger log = LogManager.getLogger(this.getClass().getName());
 
 	private ComputationalSubTask subTask1,subTask2,subTask3,subTask4,subTask5;
 	private List<ComputationalSubTask> taskList = new ArrayList<ComputationalSubTask>();
@@ -75,25 +75,6 @@ public class ProcessorTest {
 		G.get().getPlatform(id).addTask(task2);
 
         G.get().start();
-
-        try {
-            Thread.sleep(2 * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        G.get().pause();
-
-
-        try {
-            Thread.sleep(20 * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        G.get().resume();
         G.get().waitForFinish();
-
-
 	}
 }

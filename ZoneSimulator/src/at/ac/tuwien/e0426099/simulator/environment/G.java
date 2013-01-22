@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 18.01.13
  */
 public class G {
-	public static final boolean VERBOSE_LOG_MODE = true;
+	public static final boolean VERBOSE_LOG_MODE = false;
     private Logger log = LogManager.getLogger(G.class.getName());
 
 	private ConcurrentHashMap<UUID,Platform> platforms;
@@ -71,11 +71,13 @@ public class G {
         }
     }
 
-    public void waitForFinish() {
+    public boolean waitForFinish() {
         //wait for tasks to finish
         for(Platform p:platforms.values()) {
             p.waitForFinish();
         }
         log.info(getCompleteStatus(true));
+
+		return true;
     }
 }

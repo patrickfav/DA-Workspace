@@ -55,7 +55,6 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
 			pauseAllUnfinishedTasks();
-
 			currentRunningTasks.add(subTaskId); //add new task
 			addToWorkerQueue(subTaskId);
 		}

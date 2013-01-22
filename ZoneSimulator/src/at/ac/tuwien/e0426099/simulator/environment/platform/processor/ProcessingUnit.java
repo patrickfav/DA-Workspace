@@ -153,10 +153,10 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 
 		while((dest=scheduler.getNext(coreInfos)) != null) {
 			try {
-				log.debug(getLogRef()+"next task to schedule: "+ G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()).getReadAbleName());
+				log.debug(getLogRef()+"next task to schedule: "+ G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()));
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
-				log.debug(getLogRef()+"too much concurrent tasks! failing task.");
+				log.warn(getLogRef()+"too many concurrent tasks! failing task.");
 				G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}
