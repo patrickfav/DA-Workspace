@@ -1,4 +1,4 @@
-package at.ac.tuwien.e0426099.simulator.environment;
+package at.ac.tuwien.e0426099.simulator.environment.platform;
 
 import java.util.UUID;
 

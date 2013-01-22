@@ -1,7 +1,7 @@
-package at.ac.tuwien.e0426099.simulator.environment.processor.scheduler;
+package at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler;
 
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcessingInfoLoadComparator;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 

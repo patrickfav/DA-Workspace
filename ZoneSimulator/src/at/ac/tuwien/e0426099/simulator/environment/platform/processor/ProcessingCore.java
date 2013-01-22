@@ -1,11 +1,12 @@
-package at.ac.tuwien.e0426099.simulator.environment.processor;
+package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
-import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
-import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqIdComparator;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
@@ -24,7 +25,7 @@ import java.util.UUID;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingCore extends Thread implements ITaskListener,WorkingMemory.ChangedMemoryListener {
+public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITaskListener,WorkingMemory.ChangedMemoryListener {
 	private Logger log = LogManager.getLogger(ProcessingCore.class.getName());
 
 	private UUID id;
@@ -34,9 +35,7 @@ public class ProcessingCore extends Thread implements ITaskListener,WorkingMemor
 	private double concurrentTaskPenaltyPercentage;
 	private ProcessingUnitListener processingUnit;
 	private String coreName;
-
 	private List<SubTaskId> currentRunningTasks;
-
 
 	public ProcessingCore(RawProcessingPower rawProcessingPower, int maxConcurrentTasks, double concurrentTaskPenaltyPercentage) {
 		this.rawProcessingPower = rawProcessingPower;
@@ -58,10 +57,7 @@ public class ProcessingCore extends Thread implements ITaskListener,WorkingMemor
 			pauseAllUnfinishedTasks();
 
 			currentRunningTasks.add(subTaskId); //add new task
-
-			reBalanceTasks();
-
-			runAllTasks();
+			addToWorkerQueue(subTaskId);
 		}
 	}
 
@@ -114,10 +110,10 @@ public class ProcessingCore extends Thread implements ITaskListener,WorkingMemor
         this.coreName = coreName;
     }
 
-    @Override
-    public String toString() {
-        return coreName;
-    }
+	@Override
+	public String toString() {
+		return getLogRef();
+	}
 
     public synchronized String getCompleteStatus(boolean detailed) {
         StringBuffer sb = new StringBuffer();
@@ -131,15 +127,48 @@ public class ProcessingCore extends Thread implements ITaskListener,WorkingMemor
         return sb.toString();
     }
 
-    /* ********************************************************************************** CALLBACKS */
+	/* ********************************************************************************** THREAD ABSTRACT IMPL*/
+
+	@Override
+	public  void doTheWork(SubTaskId input) {
+		reBalanceTasks();
+		runAllTasks();
+	}
+
+	@Override
+	public  void onAllDone() {
+		//do nothing
+	}
+
+	@Override
+	public  boolean checkIfThereWillBeAnyWork() {
+		if(!super.checkIfThereWillBeAnyWork()) {
+			return !currentRunningTasks.isEmpty();
+		}
+
+		return super.checkIfThereWillBeAnyWork();
+	}
+
+	@Override
+	public void pause() {
+		super.pause();
+		pauseAllUnfinishedTasks();
+	}
+
+	@Override
+	public void resumeExec() {
+		super.resumeExec();
+		runAllTasks();
+	}
+
+	/* ********************************************************************************** CALLBACKS */
 
     @Override
     public synchronized void onTaskFinished(SubTaskId subTaskId) {
         pauseAllUnfinishedTasks();
         log.debug(getLogRef() + "Remove " + subTaskId + " from running tasks");
         currentRunningTasks.remove(subTaskId); //removed finished task
-        reBalanceTasks();
-        runAllTasks();
+		addToWorkerQueue(subTaskId);
         processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
     }
 
@@ -148,8 +177,7 @@ public class ProcessingCore extends Thread implements ITaskListener,WorkingMemor
         pauseAllUnfinishedTasks();
         log.debug(getLogRef() + "Failed task " + subTaskId + " removed");
         currentRunningTasks.remove(subTaskId); //removed failed task
-        reBalanceTasks();
-        runAllTasks();
+		addToWorkerQueue(subTaskId);
         processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
     }
 
@@ -208,7 +236,6 @@ public class ProcessingCore extends Thread implements ITaskListener,WorkingMemor
 			log.debug(getLogRef()+"Run Task "+t+".");
 			try {
 				G.get().getPlatform(platformId).getSubTaskForProcessor(t).run();
-				//G.get().getPlatform(platformId).getSubTaskForProcessor(t).waitForStartedRunning();
 			} catch (Exception e) {
 				log.error(getLogRef()+"Exception caught while trying to run all tasks",e);
 			}

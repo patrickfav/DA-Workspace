@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.entities;
 
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingRequirements;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
 
 import java.util.ArrayList;

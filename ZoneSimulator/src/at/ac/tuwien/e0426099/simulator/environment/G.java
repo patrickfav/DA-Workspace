@@ -1,13 +1,14 @@
 package at.ac.tuwien.e0426099.simulator.environment;
 
-import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.platform.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 
 /**
  * @author PatrickF
@@ -73,7 +74,7 @@ public class G {
     public void waitForFinish() {
         //wait for tasks to finish
         for(Platform p:platforms.values()) {
-            try { p.join();} catch (InterruptedException e) {e.printStackTrace();}
+            p.waitForFinish();
         }
         log.info(getCompleteStatus(true));
     }

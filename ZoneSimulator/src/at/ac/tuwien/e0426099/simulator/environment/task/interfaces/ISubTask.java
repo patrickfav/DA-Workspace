@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.interfaces;
 
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 

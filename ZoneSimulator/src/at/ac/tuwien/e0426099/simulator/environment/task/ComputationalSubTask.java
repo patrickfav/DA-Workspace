@@ -1,10 +1,10 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
-import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingRequirements;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingRequirements;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.TaskWorkManager;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;

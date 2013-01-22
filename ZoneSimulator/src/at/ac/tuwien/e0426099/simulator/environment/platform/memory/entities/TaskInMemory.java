@@ -1,7 +1,7 @@
-package at.ac.tuwien.e0426099.simulator.environment.memory.entities;
+package at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 /**

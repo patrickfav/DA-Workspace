@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
 
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
 
 import java.util.Comparator;
 

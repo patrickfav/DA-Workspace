@@ -1,4 +1,4 @@
-package at.ac.tuwien.e0426099.simulator.environment.processor.entities;
+package at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities;
 
 /**
  * @author PatrickF

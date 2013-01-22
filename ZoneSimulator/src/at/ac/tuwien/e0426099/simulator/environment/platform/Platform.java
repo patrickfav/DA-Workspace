@@ -1,9 +1,9 @@
-package at.ac.tuwien.e0426099.simulator.environment;
+package at.ac.tuwien.e0426099.simulator.environment.platform;
 
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingCore;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingCore;
-import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
-import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
@@ -73,14 +73,36 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
     }
 
     @Override
-    public synchronized boolean checkIfThereWillBeAnyWork() {
+    public boolean checkIfThereWillBeAnyWork() {
         boolean isDone = true;
         for (ITask task : taskMap.values()) {
             isDone &= task.isFinishedExecuting();
         }
         return !isDone;
     }
-    /* ********************************************************************************** CALLBACKS */
+
+	@Override
+	public void onAllDone() {
+		log.debug(this + " [Sync] all done callback, stop cpu");
+		processingUnit.stopExec();
+		processingUnit.interrupt(); //interrupt blocking queue
+		processingUnit.waitForFinish();
+	}
+
+	@Override
+	public void pause() {
+		super.pause();
+		processingUnit.pause();
+	}
+
+	@Override
+	public void resumeExec() {
+		super.resumeExec();
+		processingUnit.resumeExec();
+	}
+
+
+	/* ********************************************************************************** CALLBACKS */
 
 	@Override
 	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {

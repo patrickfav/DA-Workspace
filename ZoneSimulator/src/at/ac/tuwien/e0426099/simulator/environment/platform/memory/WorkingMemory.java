@@ -1,10 +1,10 @@
-package at.ac.tuwien.e0426099.simulator.environment.memory;
+package at.ac.tuwien.e0426099.simulator.environment.platform.memory;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
-import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.memory.entities.TaskInMemory;
-import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManagementMemoryListener;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.TaskInMemory;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.TaskManagementMemoryListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 import java.util.ArrayList;

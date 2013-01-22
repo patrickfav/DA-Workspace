@@ -1,13 +1,13 @@
-package at.ac.tuwien.e0426099.simulator.environment.processor;
+package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.TaskManagementMemoryListener;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.CoreDestination;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.processor.listener.ProcessingUnitListener;
-import at.ac.tuwien.e0426099.simulator.environment.processor.listener.TaskManagementMemoryListener;
-import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
@@ -33,6 +33,8 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 
 	private TaskManagementMemoryListener memoryCallBack;
 	private ProcessingUnitListener platformCallBack;
+
+
 
 	public ProcessingUnit(IScheduler scheduler, TaskManagementMemoryListener memoryCallBack,List<ProcessingCore> cores) {
 		this.scheduler =scheduler;
@@ -87,8 +89,11 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
         return sb.toString();
     }
 
-
-    /* ********************************************************************************** CALLBACKS */
+	@Override
+	public String toString() {
+		return getLogRef();
+	}
+	/* ********************************************************************************** CALLBACKS */
 
     @Override
     public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
@@ -106,6 +111,39 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
         platformCallBack.onTaskFailed(c, subTaskId);
     }
 
+ 	/* ********************************************************************************** THREAD ABSTRACT IMPL*/
+	@Override
+	public void doTheWork(SubTaskId input) {
+		scheduleTasks();
+	}
+
+	@Override
+	public  void onAllDone() {
+		log.debug(this + " [Sync] all done callback, stop cores");
+		for(ProcessingCore c : cores) {
+			c.stopExec();
+			c.interrupt(); //interrupt blocking queue
+		}
+		for(ProcessingCore c : cores) {
+			c.waitForFinish();
+		}
+	}
+
+	@Override
+	public void pause() {
+		super.pause();
+		for(ProcessingCore c : cores) {
+			c.pause();
+		}
+	}
+
+	@Override
+	public void resumeExec() {
+		super.resumeExec();
+		for(ProcessingCore c : cores) {
+			c.resumeExec();
+		}
+	}
 	/* ********************************************************************************** PRIVATES */
 
 	private synchronized void scheduleTasks() {
@@ -145,15 +183,6 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 		return "["+platformId+"|CPU]: ";
 	}
 
-    /* ********************************************************************************** THREAD ABSTRACT IMPL*/
 
-    @Override
-    public boolean checkIfThereWillBeAnyWork() {
-        return true;
-    }
 
-    @Override
-    public void doTheWork(SubTaskId input) {
-        scheduleTasks();
-    }
 }

@@ -1,13 +1,13 @@
 package at.ac.tuwien.e0426099.test.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.PlatformId;
-import at.ac.tuwien.e0426099.simulator.environment.memory.WorkingMemory;
-import at.ac.tuwien.e0426099.simulator.environment.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingCore;
-import at.ac.tuwien.e0426099.simulator.environment.processor.ProcessingUnit;
-import at.ac.tuwien.e0426099.simulator.environment.processor.entities.RawProcessingPower;
-import at.ac.tuwien.e0426099.simulator.environment.processor.scheduler.FifoLeastLoadScheduler;
+import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingCore;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler.FifoLeastLoadScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.Task;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
@@ -76,7 +76,7 @@ public class ProcessorTest {
 
         G.get().start();
 
-        /*try {
+        try {
             Thread.sleep(2 * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -91,7 +91,7 @@ public class ProcessorTest {
             e.printStackTrace();
         }
 
-        G.get().resume();*/
+        G.get().resume();
         G.get().waitForFinish();
 
 
