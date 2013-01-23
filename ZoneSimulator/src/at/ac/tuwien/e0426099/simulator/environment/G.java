@@ -15,7 +15,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 18.01.13
  */
 public class G {
-	public static final boolean VERBOSE_LOG_MODE = false;
+	public static final boolean VERBOSE_LOG_MODE_GENERAL = true;
+	public static final boolean VERBOSE_LOG_MODE_SUBTASK = false;
+	public static final boolean VERBOSE_LOG_MODE_TASK = false;
+	public static final boolean VERBOSE_LOG_MODE_SYNCTHREAD = false;
+	public static final boolean VERBOSE_LOG_MODE_SLEEPTHREAD = true;
+
+
     private Logger log = LogManager.getLogger(G.class.getName());
 
 	private ConcurrentHashMap<UUID,Platform> platforms;

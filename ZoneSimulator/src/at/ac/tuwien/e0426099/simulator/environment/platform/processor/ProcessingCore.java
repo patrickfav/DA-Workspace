@@ -3,18 +3,16 @@ package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqIdComparator;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,9 +23,8 @@ import java.util.UUID;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITaskListener,WorkingMemory.ChangedMemoryListener {
-	private Logger log = LogManager.getLogger(ProcessingCore.class.getName());
-
+public class ProcessingCore extends APauseAbleThread<ProcessingCore.CoreAction> implements ITaskListener,WorkingMemory.ChangedMemoryListener {
+	
 	private UUID id;
 	private PlatformId platformId;
 	private RawProcessingPower rawProcessingPower;
@@ -44,27 +41,26 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 		coreName ="Unassigned Core";
 		currentRunningTasks=Collections.synchronizedList(new ArrayList<SubTaskId>());
 		id=UUID.randomUUID();
+		getLog().refreshData();
 	}
 
-	public synchronized void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
-		log.debug(getLogRef() + "Add task " + subTaskId);
+	public void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
+		getLog().d("Add task " + subTaskId);
 		G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
 			throw new TooMuchConcurrentTasksException("Cannot add this task "+ G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
-			pauseAllUnfinishedTasks();
-			currentRunningTasks.add(subTaskId); //add new task
-			addToWorkerQueue(subTaskId);
+			addToWorkerQueue(new CoreAction(subTaskId, CoreAction.ActionType.ADD));
 		}
 	}
 
-	public synchronized boolean acceptsNewTask() {
+	public boolean acceptsNewTask() {
 		return currentRunningTasks.size() < maxConcurrentTasks;
 	}
 
-	public synchronized int getCurrentRunningTasksSize() {
+	public int getCurrentRunningTasksSize() {
 		return currentRunningTasks.size();
 	}
 
@@ -85,7 +81,7 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 	}
 
 
-    public synchronized int getMaxConcurrentTasks() {
+    public int getMaxConcurrentTasks() {
         return maxConcurrentTasks;
     }
 
@@ -93,11 +89,12 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 		return id;
 	}
 
-	public synchronized void setPlatformId(PlatformId platformId) {
+	public void setPlatformId(PlatformId platformId) {
 		this.platformId = platformId;
+		getLog().refreshData();
 	}
 
-    public synchronized void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
+    public void setProcessingUnitListener(ProcessingUnitListener processingUnit) {
         this.processingUnit = processingUnit;
     }
 
@@ -111,13 +108,13 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 
 	@Override
 	public String toString() {
-		return getLogRef();
+		return "["+platformId+"|CPU|Core|"+coreName+"]";
 	}
 
     public synchronized String getCompleteStatus(boolean detailed) {
         StringBuffer sb = new StringBuffer();
         sb.append(LogUtil.BR);
-        sb.append(getLogRef()+" ProcPower: "+rawProcessingPower+", MaxConcurrentTasks: "+maxConcurrentTasks+ ", ConcTaskPenalty: "+concurrentTaskPenaltyPercentage +LogUtil.BR);
+        sb.append(toString()+" ProcPower: "+rawProcessingPower+", MaxConcurrentTasks: "+maxConcurrentTasks+ ", ConcTaskPenalty: "+concurrentTaskPenaltyPercentage +LogUtil.BR);
         sb.append("Current Running Tasks:" +LogUtil.BR);
         sb.append(LogUtil.emptyListText(currentRunningTasks," - no tasks -"));
         for(SubTaskId id:currentRunningTasks) {
@@ -129,18 +126,27 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 	/* ********************************************************************************** THREAD ABSTRACT IMPL*/
 
 	@Override
-	public  void doTheWork(SubTaskId input) {
+	public synchronized void doTheWork(CoreAction input) {
+		getLog().d("start next interation (doWork)");
+		pauseAllUnfinishedTasks();
+		if(input.getActionType().equals(CoreAction.ActionType.ADD)) {
+			getLog().d("Add " + input.getSubTaskId() + " to running tasks");
+			currentRunningTasks.add(input.getSubTaskId()); //add new task
+		} else {
+			getLog().d("Remove " + input.getSubTaskId() + " from running tasks");
+			currentRunningTasks.remove(input.getSubTaskId()); //add new task
+		}
 		reBalanceTasks();
 		runAllTasks();
 	}
 
 	@Override
-	public  void onAllDone() {
+	public void onAllDone() {
 		//do nothing
 	}
 
 	@Override
-	public  boolean checkIfThereWillBeAnyWork() {
+	public synchronized boolean checkIfThereWillBeAnyWork() {
 		if(!super.checkIfThereWillBeAnyWork()) {
 			return !currentRunningTasks.isEmpty();
 		}
@@ -163,21 +169,16 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 	/* ********************************************************************************** CALLBACKS */
 
     @Override
-    public synchronized void onTaskFinished(SubTaskId subTaskId) {
-        pauseAllUnfinishedTasks();
-        log.debug(getLogRef() + "Remove " + subTaskId + " from running tasks");
-        currentRunningTasks.remove(subTaskId); //removed finished task
-		addToWorkerQueue(subTaskId);
+    public void onTaskFinished(SubTaskId subTaskId) {
+		getLog().d("Task onFinish called by " + subTaskId);
+		addToWorkerQueue(new CoreAction(subTaskId, CoreAction.ActionType.REMOVE));
         processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
     }
 
     @Override
-    public synchronized void onTaskFailed(SubTaskId subTaskId) {
-        pauseAllUnfinishedTasks();
-        log.debug(getLogRef() + "Failed task " + subTaskId + " removed");
-        currentRunningTasks.remove(subTaskId); //removed failed task
-		addToWorkerQueue(subTaskId);
-        processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
+    public void onTaskFailed(SubTaskId subTaskId) {
+		addToWorkerQueue(new CoreAction(subTaskId, CoreAction.ActionType.REMOVE));
+		processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
     }
 
 
@@ -204,6 +205,7 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 	/* ********************************************************************************** PRIVATES */
 
 	private void reBalanceTasks() {
+		getLog().d("Rebalance tasks.");
 		Collections.sort(currentRunningTasks, new ProcPwrReqIdComparator(platformId)); //sort lower demanding task first
 
 		double currentProcPwrP = rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)); //pwr - penality for concurrent processing
@@ -220,28 +222,58 @@ public class ProcessingCore extends APauseAbleThread<SubTaskId> implements ITask
 		}
 	}
 
-	private synchronized void pauseAllUnfinishedTasks() {
+	private void pauseAllUnfinishedTasks() {
+		getLog().d("Pause all tasks.");
+
+		if(currentRunningTasks.isEmpty()) {
+			getLog().d("No tasks to pause.");
+			return;
+		}
+
 		for(SubTaskId t: currentRunningTasks) {
 			if(G.get().getPlatform(platformId).getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
-				log.debug(getLogRef()+"Pause Task "+t+".");
+				getLog().v("Pause Task "+t+".");
 				G.get().getPlatform(platformId).getSubTaskForProcessor(t).pause();
-				//G.get().getPlatform(platformId).getSubTaskForProcessor(t).waitForPause();
 			}
 		}
 	}
 
-	private synchronized void runAllTasks() {
+	private void runAllTasks() {
+		getLog().d("Run all tasks.");
+
+		if(currentRunningTasks.isEmpty()) {
+			getLog().d("No tasks to run.");
+			return;
+		}
+
 		for(SubTaskId t: currentRunningTasks) {
-			log.debug(getLogRef()+"Run Task "+t+".");
+			getLog().v("Run Task "+t+".");
 			try {
 				G.get().getPlatform(platformId).getSubTaskForProcessor(t).run();
 			} catch (Exception e) {
-				log.error(getLogRef()+"Exception caught while trying to run all tasks",e);
+				getLog().e("Exception caught while trying to run all tasks",e);
 			}
 		}
 	}
 
-	private String getLogRef(){
-		return "["+platformId+"|CPU|Core|"+coreName+"]: ";
+	/* **************************************************************************** INNER CLASS */
+
+	public static class CoreAction {
+		public enum ActionType {ADD,REMOVE}
+		private SubTaskId subTaskId;
+		private ActionType actionType;
+
+		public CoreAction(SubTaskId subTask, ActionType actionType) {
+			this.subTaskId = subTask;
+			this.actionType = actionType;
+		}
+
+		public SubTaskId getSubTaskId() {
+			return subTaskId;
+		}
+
+		public ActionType getActionType() {
+			return actionType;
+		}
 	}
 }

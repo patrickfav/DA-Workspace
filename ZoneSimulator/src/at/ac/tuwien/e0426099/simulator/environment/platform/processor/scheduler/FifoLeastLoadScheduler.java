@@ -7,7 +7,6 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -16,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class FifoLeastLoadScheduler implements IScheduler{
 
-	private Queue<SubTaskId> taskQueue;
+	private ConcurrentLinkedQueue<SubTaskId> taskQueue;
 
 	public FifoLeastLoadScheduler() {
 		taskQueue=new ConcurrentLinkedQueue<SubTaskId>();
@@ -29,7 +28,7 @@ public class FifoLeastLoadScheduler implements IScheduler{
 
 	@Override
 	public CoreDestination getNext(List<ProcessingCoreInfo> coreInfos) {
-		if(coreInfos != null && coreInfos.size() > 0 && !taskQueue.isEmpty()) {
+		if(coreInfos != null && !coreInfos.isEmpty() && !taskQueue.isEmpty()) {
 			Collections.sort(coreInfos,new ProcessingInfoLoadComparator());
 			return new CoreDestination(coreInfos.get(0).getId(),taskQueue.poll());
 		}

@@ -1,11 +1,12 @@
 package at.ac.tuwien.e0426099.simulator.environment.abstracts;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.util.Log;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,15 +16,15 @@ import java.util.concurrent.Semaphore;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class APauseAbleThread<T> extends Thread {
-    private final Logger log = LogManager.getLogger(this.getClass().getName());
-
-    private BlockingQueue<T> workerQueue;
+	private Log log = new Log(this, G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_SYNCTHREAD);
+	private final static long BLOCKING_TIMEOUT_SEC = 20;
+    private BlockingDeque<T> workerQueue;
     private Semaphore pauseSemaphore;
-    private boolean isOnPause;
+    private volatile boolean isOnPause;
 	private boolean workSwitch;
 
     public APauseAbleThread() {
-        workerQueue = new LinkedBlockingQueue<T>();
+        workerQueue = new LinkedBlockingDeque<T>();
         pauseSemaphore=new Semaphore(0,false);
 		workSwitch=true;
     }
@@ -32,29 +33,38 @@ public abstract class APauseAbleThread<T> extends Thread {
     public void run() {
         while (checkIfThereWillBeAnyWork()) {
             if (isOnPause) {
-                log.debug(this + " [Sync] waiting in pause mode");
+                log.d("[Sync] waiting in pause mode");
                 pauseSemaphore.acquireUninterruptibly();
-                log.debug(this + " [Sync] resuming");
+                log.d("[Sync] resuming");
             }
-            log.debug(this + " [Sync] Waiting for dispatching next task");
-            try {doTheWork(workerQueue.take());} catch (InterruptedException e) {/*ignore*/}
+            log.d("[Sync] Waiting for dispatching next task");
+			try {
+				T obj = workerQueue.poll(BLOCKING_TIMEOUT_SEC, TimeUnit.SECONDS);
+				if(obj != null) {
+					doTheWork(obj);
+				} else {
+					log.d("[Sync] Timeout");
+				}
+			} catch (InterruptedException e) {
+				log.w(" [Sync] interrupt called while waiting",e);
+			}
         }
 		onAllDone();
-        log.debug(this + " All done.");
+        log.d("All done.");
     }
 
     public synchronized void pause() {
-		log.debug(this + " [Sync] pause called");
+		log.d("[Sync] pause called");
         isOnPause = true;
     }
 
     public synchronized void resumeExec() {
-		log.debug(this + " [Sync] resume called");
+		log.d("[Sync] resume called");
         if(isOnPause) {
             isOnPause = false;
             pauseSemaphore.release();
         } else {
-            log.warn("Trying to resume, but not in pause.");
+            log.w("Trying to resume, but not in pause.");
         }
     }
 
@@ -62,22 +72,26 @@ public abstract class APauseAbleThread<T> extends Thread {
 		workSwitch = false;
 	}
 
-    public synchronized void addToWorkerQueue(T obj) {
+    public void addToWorkerQueue(T obj) {
         workerQueue.add(obj);
     }
 
-    public synchronized boolean checkIfThereWillBeAnyWork() {
+    public boolean checkIfThereWillBeAnyWork() {
 		return workSwitch;
 	}
     public abstract void doTheWork(T input);
 	public abstract void onAllDone();
 
-	public synchronized void waitForFinish() {
-		log.debug(this+ " [Sync] wait for task to finish");
+	public void waitForFinish() {
+		log.d("[Sync] wait for task to finish");
 		try {
 			join();
 		} catch (InterruptedException e) {
-			//ignore
+			log.w("[Sync] interrupt called while waitForFinish");
 		}
+	}
+
+	public Log getLog() {
+		return log;
 	}
 }

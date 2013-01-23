@@ -4,8 +4,7 @@ import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import at.ac.tuwien.e0426099.simulator.util.Log;
 
 import java.util.*;
 
@@ -14,7 +13,7 @@ import java.util.*;
  * @since 13.12.12
  */
 public class Task implements ITask{
-	private Logger log = LogManager.getLogger(Task.class.getName());
+	private Log log = new Log(this,G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_TASK);
 
 	private UUID id;
 	private PlatformId platformId;
@@ -31,6 +30,7 @@ public class Task implements ITask{
 		subTaskOrder =new ArrayList<UUID>();
 		currentSubTask=-1;
 		setStatus(TaskStatus.NOT_STARTED);
+		log.refreshData();
 	}
 
 	public void addSubTask(ISubTask subTask) {
@@ -41,14 +41,14 @@ public class Task implements ITask{
 
 	@Override
 	public ISubTask getNextSubTask() {
-		log.debug(getLogRef() +" get next subtask");
+		log.d("get next subtask");
 		if(subTasksLeftToDo()) {
 			setStatus(TaskStatus.IN_PROGRESS);
 			ISubTask st = getSubTaskById(subTaskOrder.get(++currentSubTask));
-			log.debug(getLogRef() +" return next subtask: "+st);
+			log.d("return next subtask: "+st);
 			return st;
 		}
-		log.debug(getLogRef() +" no more subtasks");
+		log.d("no more subtasks");
 		setStatus(TaskStatus.FINISHED);
 		return null;
 	}
@@ -60,8 +60,7 @@ public class Task implements ITask{
 	}
 	@Override
 	public boolean subTasksLeftToDo() {
-		if(G.VERBOSE_LOG_MODE)
-			log.debug(getLogRef()+subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
+		log.v(subTaskOrder.size()+" > 0 && "+(currentSubTask+1)+" < "+subTaskOrder.size()+": "+(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()));
 
 		if(subTaskOrder.size() > 0 && currentSubTask+1 < subTaskOrder.size()) {
 			return true;
@@ -105,6 +104,7 @@ public class Task implements ITask{
 		for(ISubTask st: subTasks.values()) {
 			st.setPlatformId(id);
 		}
+		log.refreshData();
 	}
 
     @Override
@@ -114,18 +114,12 @@ public class Task implements ITask{
 
     @Override
     public String toString() {
-        return  readAbleName+"/" + id.toString().substring(0,5)+" (status=" + status+")";
+		return "["+platformId+"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"]";
     }
     /* ***************************************************************************** PRIVATES */
 
 	private void setStatus(TaskStatus newStatus) {
-		log.debug(getLogRef() + "Set status from " + status + " to " + newStatus);
+		log.d("Set status from " + status + " to " + newStatus);
 		this.status = newStatus;
 	}
-
-	private String getLogRef() {
-		return "["+platformId+"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"]: ";
-	}
-
-
 }

@@ -1,18 +1,16 @@
 package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
+import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.TaskManagementMemoryListener;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler.IScheduler;
-import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +20,6 @@ import java.util.List;
  * @since 07.12.12
  */
 public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements ProcessingUnitListener {
-	private Logger log = LogManager.getLogger(ProcessingUnit.class.getName());
 
 	private PlatformId platformId;
 	private List<ProcessingCore> cores;
@@ -33,8 +30,6 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 
 	private TaskManagementMemoryListener memoryCallBack;
 	private ProcessingUnitListener platformCallBack;
-
-
 
 	public ProcessingUnit(IScheduler scheduler, TaskManagementMemoryListener memoryCallBack,List<ProcessingCore> cores) {
 		this.scheduler =scheduler;
@@ -48,10 +43,11 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 			cores.get(i).setCoreName("C" + String.valueOf(i));
 			cores.get(i).start();
 		}
+		getLog().refreshData();
 	}
 
-	public synchronized void addTask(SubTaskId subTaskId) {
-		log.debug(getLogRef()+"adding subtask to cpu "+subTaskId);
+	public void addTask(SubTaskId subTaskId) {
+		getLog().d("adding subtask to cpu "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		scheduler.addToQueue(subTaskId);
         addToWorkerQueue(subTaskId);
@@ -63,6 +59,7 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 		for(int i=0;i<cores.size();i++) {
 			cores.get(i).setPlatformId(platformId);
 		}
+		getLog().refreshData();
 	}
 
 	public synchronized void setPlatformCallBack(ProcessingUnitListener platformCallBack) {
@@ -71,7 +68,7 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 
     public synchronized String getCompleteStatus(boolean detailed) {
         StringBuffer sb = new StringBuffer();
-        sb.append(LogUtil.BR+LogUtil.h3("CPU "+getLogRef()));
+        sb.append(LogUtil.BR+LogUtil.h3("CPU "+toString()));
         for(ProcessingCore core:cores) {
             sb.append(core.getCompleteStatus(detailed) + LogUtil.BR);
         }
@@ -91,22 +88,22 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 
 	@Override
 	public String toString() {
-		return getLogRef();
+		return "["+platformId+"|CPU]";
 	}
 	/* ********************************************************************************** CALLBACKS */
 
     @Override
-    public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-        log.debug(getLogRef()+"task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
-        memoryCallBack.onSubTaskAdded(subTaskId);
-        finnishedSubTasks.add(subTaskId);
-        addToWorkerQueue(subTaskId);
+    public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+		getLog().d("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
+		memoryCallBack.onSubTaskAdded(subTaskId);
+		finnishedSubTasks.add(subTaskId);
+		addToWorkerQueue(subTaskId);
         platformCallBack.onTaskFinished(c,subTaskId);
     }
 
     @Override
-    public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
-        failedSubTasks.add(subTaskId);
+    public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+		failedSubTasks.add(subTaskId);
         addToWorkerQueue(subTaskId);
         platformCallBack.onTaskFailed(c, subTaskId);
     }
@@ -119,7 +116,7 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 
 	@Override
 	public void onAllDone() {
-		log.debug(this + " [Sync] all done callback, stop cores");
+		getLog().d("[Sync] all done callback, stop cores");
 		for(ProcessingCore c : cores) {
 			c.stopExec();
 			c.interrupt(); //interrupt blocking queue
@@ -147,42 +144,35 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 	/* ********************************************************************************** PRIVATES */
 
 	private synchronized void scheduleTasks() {
-		log.debug(getLogRef()+"scheduling tasks between cores");
+		getLog().d("scheduling tasks between cores");
 		CoreDestination dest;
-		List<ProcessingCoreInfo> coreInfos = getAllInfos();
 
-		while((dest=scheduler.getNext(coreInfos)) != null) {
+		while((dest=scheduler.getNext(getAllInfos())) != null) {
 			try {
-				log.debug(getLogRef()+"next task to schedule: "+ G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()));
+				getLog().d("next task to schedule: "+ G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()));
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
-				log.warn(getLogRef()+"too many concurrent tasks! failing task.");
+				getLog().w("too many concurrent tasks! failing task.",e);
 				G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}
 		}
 	}
 
-	private synchronized void addTaskToDestination(CoreDestination dest) throws TooMuchConcurrentTasksException {
+	private void addTaskToDestination(CoreDestination dest) throws TooMuchConcurrentTasksException {
 		for(ProcessingCore core: cores) {
 			if(core.getCoreId().equals(dest.getCoreId())) {
 				core.addTask(dest.getSubTaskId());
+				break;
 			}
 		}
 	}
 
-	private synchronized List<ProcessingCoreInfo> getAllInfos() {
+	private List<ProcessingCoreInfo> getAllInfos() {
 		List<ProcessingCoreInfo> list = new ArrayList<ProcessingCoreInfo>();
 		for(ProcessingCore core: cores) {
 			list.add(core.getInfo());
 		}
 		return list;
 	}
-
-	private String getLogRef(){
-		return "["+platformId+"|CPU]: ";
-	}
-
-
-
 }

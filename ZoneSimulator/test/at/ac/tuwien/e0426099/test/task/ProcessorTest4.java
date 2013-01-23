@@ -35,9 +35,9 @@ public class ProcessorTest4 {
 	private List<ITask> taskList = new ArrayList<ITask>();
 	@Before
 	public void setUp() {
-		for(int i=0;i<2;i++) {
+		for(int i=0;i<3;i++) {
 			taskList.add(i,new Task("No"+i));
-			for(int j=0;j<10;j++) {
+			for(int j=0;j<7;j++) {
 				taskList.get(i).addSubTask(new ComputationalSubTask("SubT"+i+"-"+j,new MemoryAmount(10),getLongInRange(5,30),getLongInRange(3000,80000)));
 			}
 		}
