@@ -42,9 +42,6 @@ public class TestSubTask extends AZoneSimTest{
 	@After
 	public void tearDown() {
 		//wait for threads to finish
-		for(ComputationalSubTask t:taskList) {
-			t.waitForTaskToFinish();
-		}
 		log.info("========================================================");
 	}
 

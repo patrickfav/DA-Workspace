@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
@@ -79,7 +78,6 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		id.upadteParentId(parentTaskId);
 	}
 
-	@Override
 	public PlatformId getPlatformId() {
 		return platformId;
 	}
@@ -231,21 +229,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
     @Override
     public String toString() {
-        return "["+platformId+"|"+type+"|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"]";
-    }
-
-    @Override
-    @Deprecated
-    public void waitForTaskToFinish() {
-        if(futureRefForThread != null) {
-            try {
-                futureRefForThread.get();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        return "["+platformId+"|"+type+"|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"|"+status+"]";
     }
 
     public synchronized String getCompleteStatus(boolean detailed) {

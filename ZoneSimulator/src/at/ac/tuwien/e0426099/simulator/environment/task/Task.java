@@ -21,7 +21,7 @@ public class Task implements ITask{
 	private Map<UUID,ISubTask> subTasks;
 	private List<UUID> subTaskOrder;
 	private int currentSubTask;
-	private TaskStatus status;
+	private volatile TaskStatus status;
 
 	public Task(String readAbleName) {
 		this.id = UUID.randomUUID();
@@ -114,7 +114,7 @@ public class Task implements ITask{
 
     @Override
     public String toString() {
-		return "["+platformId+"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"]";
+		return "["+platformId+"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"|"+status+"]";
     }
     /* ***************************************************************************** PRIVATES */
 

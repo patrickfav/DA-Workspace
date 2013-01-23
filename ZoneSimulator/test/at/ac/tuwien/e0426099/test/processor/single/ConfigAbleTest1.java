@@ -21,10 +21,10 @@ public class ConfigAbleTest1 extends AProcessorTest{
 	@Before
 	public void setUp() {
 		super.setUp();
-		taskList = generateFixedTasks(3,4);
+		taskList = generateFixedTasks(10,8);
 	}
 
-	@Test(timeout = 60000)
+	@Test(timeout = 180000)
 	public void testSubTaskStartShouldFinish() {
 		PlatformId id = G.get().addPlatform("local",defaultDualCoreUnit);
 

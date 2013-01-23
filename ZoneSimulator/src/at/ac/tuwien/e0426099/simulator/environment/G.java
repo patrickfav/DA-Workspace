@@ -21,7 +21,6 @@ public class G {
 	public static final boolean VERBOSE_LOG_MODE_SYNCTHREAD = true;
 	public static final boolean VERBOSE_LOG_MODE_SLEEPTHREAD = true;
 
-
     private Logger log = LogManager.getLogger(G.class.getName());
 
 	private ConcurrentHashMap<UUID,Platform> platforms;

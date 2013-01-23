@@ -37,25 +37,6 @@ public class SimpleTest2 extends AProcessorTest{
 		G.get().getPlatform(id).addTask(task1);
 		G.get().getPlatform(id).addTask(task2);
 
-		G.get().start();
-
-        try {
-            Thread.sleep(2 * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        G.get().pause();
-
-
-        try {
-            Thread.sleep(1 * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        G.get().resume();
-
 		assertTrue(G.get().waitForFinish());
 	}
 }

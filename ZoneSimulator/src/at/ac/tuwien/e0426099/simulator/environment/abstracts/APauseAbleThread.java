@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class APauseAbleThread<T> extends Thread {
 	private Log log = new Log(this, G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_SYNCTHREAD);
-	private final static long BLOCKING_TIMEOUT_SEC = 3600;
+	private final static long BLOCKING_TIMEOUT_SEC = 15;
     private BlockingDeque<T> workerQueue;
     private Semaphore pauseSemaphore;
     private volatile boolean isOnPause;
@@ -46,7 +46,7 @@ public abstract class APauseAbleThread<T> extends Thread {
 					log.d("[Sync] Timeout");
 				}
 			} catch (InterruptedException e) {
-				log.w(" [Sync] interrupt called while waiting",e);
+				log.w("[Sync] interrupt called while waiting: "+e);
 			}
         }
 		onAllDone();

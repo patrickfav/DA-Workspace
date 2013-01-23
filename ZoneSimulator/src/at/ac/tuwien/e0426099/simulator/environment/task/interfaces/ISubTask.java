@@ -17,7 +17,6 @@ public interface ISubTask {
 	public SubTaskId getSubTaskId();
 	public String getReadAbleName();
 	public void setParentId(UUID id);
-	public PlatformId getPlatformId();
 	public void setPlatformId(PlatformId id);
 
 	public void pause();
@@ -29,6 +28,5 @@ public interface ISubTask {
 
 	public void addTaskListener(ITaskListener listener);
 
-	public void waitForTaskToFinish();
     public String getCompleteStatus(boolean detailed);
 }
