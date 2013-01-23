@@ -24,7 +24,7 @@ public class RawProcessingPower {
 	 * @param penalty
 	 * @return
 	 */
-	public double getComputationsPerMs(double penalty) {
+	public double getComputationsPerMsForPenalty(double penalty) {
 		if(penalty >= 1) {
 			return 0;
 		} else if(penalty <= 0) {

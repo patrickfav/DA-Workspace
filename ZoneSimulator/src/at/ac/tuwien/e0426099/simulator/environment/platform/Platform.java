@@ -37,7 +37,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 		getLog().refreshData();
 	}
 
-	public synchronized void addTask(ITask task) {
+	public void addTask(ITask task) {
 		task.setPlatformId(platformId);
 		getLog().i("Add new Task: " + task);
 		taskMap.put(task.getId(), task);
@@ -48,7 +48,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 		return (IComputationalSubTask) taskMap.get(subTaskId.getParentTaskId()).getSubTaskById(subTaskId.getSubTaskId());
 	}
 
-	public synchronized ExecutorService getThreadPool() {
+	public ExecutorService getThreadPool() {
 	    return threadPool;
 	}
 
@@ -78,6 +78,8 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
         for (ITask task : taskMap.values()) {
             isDone &= task.isFinishedExecuting();
         }
+
+		getLog().d("[Sync] checkIfThereWillBeAnyWork: "+String.valueOf(!isDone));
         return !isDone;
     }
 
@@ -105,12 +107,12 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 	/* ********************************************************************************** CALLBACKS */
 
 	@Override
-	public synchronized void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
 		addToWorkerQueue(subTaskId.getParentTaskId());
 	}
 
 	@Override
-	public synchronized void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
 		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
         addToWorkerQueue(subTaskId.getParentTaskId());
 	}

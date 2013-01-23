@@ -12,6 +12,6 @@ public class ProcessingInfoLoadComparator implements Comparator<ProcessingCoreIn
 
 	@Override
 	public int compare(ProcessingCoreInfo o1, ProcessingCoreInfo o2) {
-		return o2.getLoad().compareTo(o1.getLoad());
+		return o1.getLoad().compareTo(o2.getLoad());
 	}
 }

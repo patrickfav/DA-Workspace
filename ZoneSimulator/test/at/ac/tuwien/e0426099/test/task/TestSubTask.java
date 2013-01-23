@@ -3,6 +3,7 @@ package at.ac.tuwien.e0426099.test.task;
 import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
+import at.ac.tuwien.e0426099.test.AZoneSimTest;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -18,7 +19,7 @@ import static junit.framework.Assert.fail;
  * @author PatrickF
  * @since 09.12.12
  */
-public class TestSubTask {
+public class TestSubTask extends AZoneSimTest{
 	private Logger log = LogManager.getLogger(TestSubTask.class.getName());
 
 	private ComputationalSubTask subTask1,subTask2,subTask3;

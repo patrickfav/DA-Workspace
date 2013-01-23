@@ -73,7 +73,10 @@ public class ProcessingCore extends APauseAbleThread<ProcessingCore.CoreAction> 
 		for(SubTaskId t: currentRunningTasks) {
 			sum += G.get().getPlatform(platformId).getSubTaskForProcessor(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
 		}
-		return rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)) / (double) sum;
+		if(sum == 0)
+			return 0;
+
+		return Math.min(1,(double) sum / rawProcessingPower.getComputationsPerMsForPenalty(concurrentTaskPenaltyPercentage * (currentRunningTasks.size() - 1)));
 	}
 
 	public synchronized ProcessingCoreInfo getInfo() {
@@ -208,7 +211,7 @@ public class ProcessingCore extends APauseAbleThread<ProcessingCore.CoreAction> 
 		getLog().d("Rebalance tasks.");
 		Collections.sort(currentRunningTasks, new ProcPwrReqIdComparator(platformId)); //sort lower demanding task first
 
-		double currentProcPwrP = rawProcessingPower.getComputationsPerMs(concurrentTaskPenaltyPercentage*(currentRunningTasks.size()-1)); //pwr - penality for concurrent processing
+		double currentProcPwrP = rawProcessingPower.getComputationsPerMsForPenalty(concurrentTaskPenaltyPercentage * (currentRunningTasks.size() - 1)); //pwr - penality for concurrent processing
 		double maxProcPwrPerTask =  currentProcPwrP/currentRunningTasks.size(); //fairly shared resources
 
 		for(int i=0; i<currentRunningTasks.size(); i++) {
