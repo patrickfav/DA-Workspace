@@ -89,7 +89,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public synchronized void pause() {
+	public void pause() {
 		if(status == SubTaskStatus.RUNNING) {
 			setStatus(SubTaskStatus.PAUSED);
 			interruptExecThread();
@@ -100,7 +100,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public synchronized void run() {
+	public void run() {
         if(status == SubTaskStatus.FINISHED) {
             log.w("This seems to be a conccurrent error, nothing to worry about that much: try to run in FINISH state. The run attempt will be ignored.");
         } else {
@@ -117,7 +117,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public synchronized void fail(Exception e) {
+	public void fail(Exception e) {
 		aquireSempahore(checkOnFinishSemaphore,"checkFinsihFail()");
 		log.i("Task failed. ["+e.getClass().getSimpleName()+"]");
 		setStatus(SubTaskStatus.SIMULATED_ERROR);
@@ -128,7 +128,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	@Override
-	public synchronized void updateAvailableProcessingPower(RawProcessingPower resources) {
+	public void updateAvailableProcessingPower(RawProcessingPower resources) {
 		if(resources.getComputationsPerMs() > requirements.getMaxComputationalUtilization().getComputationsPerMs()) {
 			availableProcPower = requirements.getMaxComputationalUtilization();
 		} else {
@@ -186,7 +186,6 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		log.e("Exception thrown while executing Thread",e);
 		releaseSempahore(startStopSemaphore,"startStopExecException");
 		callAllListenerFailed();
-
 	}
 
     /* ***************************************************************************** GETTER N SETTER */
@@ -248,7 +247,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	/* ***************************************************************************** PRIVATES */
 
-	private synchronized void interruptExecThread() {
+	private void interruptExecThread() {
 		log.v("interrupt called");
 		if(futureRefForThread != null) {
 			if(!futureRefForThread.cancel(true)) {
@@ -258,7 +257,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		futureRefForThread =null; //can only interrupt once
 	}
 
-	private synchronized void setStatus(SubTaskStatus t) {
+	private void setStatus(SubTaskStatus t) {
 		log.d("Status change from "+status+" to " + t);
 		status = t;
 	}

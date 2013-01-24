@@ -45,7 +45,7 @@ public class RawProcessingPower {
 
 	public long getEstimatedTimeInMsToFinish(long computationsNeeded) {
 		if(computationsPerMs > 0)
-			return (long) Math.ceil(computationsNeeded / computationsPerMs);
+			return Math.max(0,(long) Math.ceil(computationsNeeded / computationsPerMs));
 
 		return 0;
 	}

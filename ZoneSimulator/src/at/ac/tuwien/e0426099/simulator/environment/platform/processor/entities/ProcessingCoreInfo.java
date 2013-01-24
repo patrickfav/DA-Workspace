@@ -43,4 +43,17 @@ public class ProcessingCoreInfo {
 	public String getName() {
 		return name;
 	}
+
+
+	@Override
+	public String toString() {
+		return "ProcessingCoreInfo{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", load=" + load +
+				", currentRunningTasks=" + currentRunningTasks +
+				", maxConcurrentTasks=" + maxConcurrentTasks +
+				", createdTimestamp=" + createdTimestamp +
+				'}';
+	}
 }

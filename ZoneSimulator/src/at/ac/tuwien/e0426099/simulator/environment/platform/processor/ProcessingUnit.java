@@ -3,6 +3,7 @@ package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ActionWrapper;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
@@ -19,7 +20,7 @@ import java.util.List;
  * @author PatrickF
  * @since 07.12.12
  */
-public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements ProcessingUnitListener {
+public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements ProcessingUnitListener {
 
 	private PlatformId platformId;
 	private List<ProcessingCore> cores;
@@ -49,8 +50,7 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 	public void addTask(SubTaskId subTaskId) {
 		getLog().d("adding subtask to cpu "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
-		scheduler.addToQueue(subTaskId);
-        addToWorkerQueue(subTaskId);
+        addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.ADD));
 	}
 
 	public synchronized void setPlatformId(PlatformId platformId) {
@@ -97,21 +97,26 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 		getLog().d("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
 		memoryCallBack.onSubTaskAdded(subTaskId);
 		finnishedSubTasks.add(subTaskId);
-		addToWorkerQueue(subTaskId);
+		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
         platformCallBack.onTaskFinished(c,subTaskId);
     }
 
     @Override
     public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
 		failedSubTasks.add(subTaskId);
-        addToWorkerQueue(subTaskId);
+        addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
         platformCallBack.onTaskFailed(c, subTaskId);
     }
 
  	/* ********************************************************************************** THREAD ABSTRACT IMPL*/
 	@Override
-	public void doTheWork(SubTaskId input) {
-		scheduleTasks();
+	public void doTheWork(ActionWrapper input) {
+		getWorkLock().lock();
+		if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
+			scheduler.addToQueue(input.getSubTaskId());
+			scheduleTasks();
+		}
+		getWorkLock().unlock();
 	}
 
 	@Override
@@ -143,7 +148,7 @@ public class ProcessingUnit extends APauseAbleThread<SubTaskId> implements Proce
 	}
 	/* ********************************************************************************** PRIVATES */
 
-	private synchronized void scheduleTasks() {
+	private void scheduleTasks() {
 		getLog().d("scheduling tasks between cores");
 		CoreDestination dest;
 

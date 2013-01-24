@@ -20,6 +20,7 @@ public class G {
 	public static final boolean VERBOSE_LOG_MODE_TASK = true;
 	public static final boolean VERBOSE_LOG_MODE_SYNCTHREAD = true;
 	public static final boolean VERBOSE_LOG_MODE_SLEEPTHREAD = true;
+	public static final boolean VERBOSE_LOG_MODE_SCHEDULER = true;
 
     private Logger log = LogManager.getLogger(G.class.getName());
 

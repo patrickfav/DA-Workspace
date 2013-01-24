@@ -7,6 +7,8 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,11 +24,13 @@ public abstract class APauseAbleThread<T> extends Thread {
     private Semaphore pauseSemaphore;
     private volatile boolean isOnPause;
 	private boolean workSwitch;
+	private Lock workLock;
 
     public APauseAbleThread() {
         workerQueue = new LinkedBlockingDeque<T>();
         pauseSemaphore=new Semaphore(0,false);
 		workSwitch=true;
+		workLock = new ReentrantLock();
     }
 
     @Override
@@ -93,5 +97,9 @@ public abstract class APauseAbleThread<T> extends Thread {
 
 	public Log getLog() {
 		return log;
+	}
+
+	public Lock getWorkLock() {
+		return workLock;
 	}
 }

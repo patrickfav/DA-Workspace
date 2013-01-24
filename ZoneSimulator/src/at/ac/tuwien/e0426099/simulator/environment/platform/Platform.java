@@ -27,7 +27,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 	private ProcessingUnit processingUnit;
 
 	public Platform(PlatformId platformId, ProcessingUnit unit) {
-        this.platformId = platformId;
+		this.platformId = platformId;
 		taskMap = new ConcurrentHashMap<UUID, ITask>();
 		threadPool = Executors.newCachedThreadPool();
 		processingUnit = unit;
@@ -41,7 +41,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 		task.setPlatformId(platformId);
 		getLog().i("Add new Task: " + task);
 		taskMap.put(task.getId(), task);
-        addToWorkerQueue(task.getId());
+		addToWorkerQueue(task.getId());
 	}
 
 	public IComputationalSubTask getSubTaskForProcessor(SubTaskId subTaskId) {
@@ -49,7 +49,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 	}
 
 	public ExecutorService getThreadPool() {
-	    return threadPool;
+		return threadPool;
 	}
 
 	@Override
@@ -66,22 +66,24 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 
     /* ********************************************************************************** THREAD ABSTRACT IMPL*/
 
-    @Override
-    public void doTheWork(UUID input) {
-        if(input != null && taskMap.containsKey(input))
-            dispatcher(taskMap.get(input));
-    }
+	@Override
+	public void doTheWork(UUID input) {
+		getWorkLock().lock();
+		if (input != null && taskMap.containsKey(input))
+			dispatcher(taskMap.get(input));
+		getWorkLock().unlock();
+	}
 
-    @Override
-    public boolean checkIfThereWillBeAnyWork() {
-        boolean isDone = true;
-        for (ITask task : taskMap.values()) {
-            isDone &= task.isFinishedExecuting();
-        }
+	@Override
+	public boolean checkIfThereWillBeAnyWork() {
+		boolean isDone = true;
+		for (ITask task : taskMap.values()) {
+			isDone &= task.isFinishedExecuting();
+		}
 
-		getLog().d("[Sync] checkIfThereWillBeAnyWork: "+String.valueOf(!isDone));
-        return !isDone;
-    }
+		getLog().d("[Sync] checkIfThereWillBeAnyWork: " + String.valueOf(!isDone));
+		return !isDone;
+	}
 
 	@Override
 	public synchronized void onAllDone() {
@@ -114,7 +116,7 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 	@Override
 	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
 		taskMap.get(subTaskId.getParentTaskId()).registerFailedSubTask(subTaskId.getSubTaskId());
-        addToWorkerQueue(subTaskId.getParentTaskId());
+		addToWorkerQueue(subTaskId.getParentTaskId());
 	}
 
 
