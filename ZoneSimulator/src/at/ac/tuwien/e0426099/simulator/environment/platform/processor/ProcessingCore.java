@@ -2,7 +2,7 @@ package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ActionWrapper;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
@@ -27,7 +27,7 @@ import java.util.UUID;
 public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements ITaskListener,WorkingMemory.ChangedMemoryListener {
 	
 	private UUID id;
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private RawProcessingPower rawProcessingPower;
 	private int maxConcurrentTasks;
 	private double concurrentTaskPenaltyPercentage;
@@ -47,10 +47,10 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 
 	public void addTask(SubTaskId subTaskId) throws TooMuchConcurrentTasksException {
 		getLog().d("Add task " + subTaskId);
-		G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
+		G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).addTaskListener(this);//set listener for callback
 
 		if(!acceptsNewTask()) { //just wait in queue
-			throw new TooMuchConcurrentTasksException("Cannot add this task "+ G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getReadAbleName()+
+			throw new TooMuchConcurrentTasksException("Cannot add this task "+ G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
 			addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.ADD));
@@ -72,7 +72,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 	public double getLoad() {
 		long sum = 0;
 		for(SubTaskId t: currentRunningTasks) {
-			sum += G.get().getPlatform(platformId).getSubTaskForProcessor(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
+			sum += G.get().getPlatform(zoneId).getSubTaskForProcessor(t).getCurrentlyAssignedProcessingPower().getComputationsPerMs();
 		}
 		if(sum == 0)
 			return 0;
@@ -93,8 +93,8 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		return id;
 	}
 
-	public void setPlatformId(PlatformId platformId) {
-		this.platformId = platformId;
+	public void setZoneId(ZoneId zoneId) {
+		this.zoneId = zoneId;
 		getLog().refreshData();
 	}
 
@@ -112,7 +112,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 
 	@Override
 	public String toString() {
-		return "["+platformId+"|CPU|Core|"+coreName+"]";
+		return "["+ zoneId +"|CPU|Core|"+coreName+"]";
 	}
 
     public synchronized String getCompleteStatus(boolean detailed) {
@@ -122,7 +122,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
         sb.append("Current Running Tasks:" +LogUtil.BR);
         sb.append(LogUtil.emptyListText(currentRunningTasks," - no tasks -"));
         for(SubTaskId id:currentRunningTasks) {
-            sb.append(G.get().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
         }
         return sb.toString();
     }
@@ -212,19 +212,19 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 
 	private void reBalanceTasks() {
 		double currentProcPwrP = rawProcessingPower.getComputationsPerMsForPenalty(concurrentTaskPenaltyPercentage * (Math.max(0,currentRunningTasks.size() - 1))); //pwr - penality for concurrent processing
-		double maxProcPwrPerTask =  currentProcPwrP/Math.max(1,currentRunningTasks.size()); //fairly shared resources
+		double maxProcPwrPerTask =  currentProcPwrP/Math.max(1, currentRunningTasks.size()); //fairly shared resources
 
 		getLog().d("Rebalance tasks. CurrentPower "+currentProcPwrP+" will be divided upon "+currentRunningTasks.size()+" running tasks, so maxPowerIs "+maxProcPwrPerTask);
 
-		Collections.sort(currentRunningTasks, new ProcPwrReqIdComparator(platformId)); //sort lower demanding task first
+		Collections.sort(currentRunningTasks, new ProcPwrReqIdComparator(zoneId)); //sort lower demanding task first
 
 		for(int i=0; i<currentRunningTasks.size(); i++) {
-			if(G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
-				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
-				G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
+			if(G.get().getPlatform(zoneId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs() <= (long) maxProcPwrPerTask) { //needs less procPwr as provided
+				double procPwrThatCanBeSharedAgain = maxProcPwrPerTask-(double) G.get().getPlatform(zoneId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs();
+				G.get().getPlatform(zoneId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(G.get().getPlatform(zoneId).getSubTaskForProcessor(currentRunningTasks.get(i)).getProcessingRequirements().getMaxComputationalUtilization());
 				maxProcPwrPerTask += procPwrThatCanBeSharedAgain/(currentRunningTasks.size()-i+1); //divide upon remaining tasks
 			} else {
-				G.get().getPlatform(platformId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
+				G.get().getPlatform(zoneId).getSubTaskForProcessor(currentRunningTasks.get(i)).updateAvailableProcessingPower(new RawProcessingPower((long) Math.floor(maxProcPwrPerTask)));
 			}
 		}
 	}
@@ -238,9 +238,9 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		}
 
 		for(SubTaskId t: currentRunningTasks) {
-			if(G.get().getPlatform(platformId).getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
+			if(G.get().getPlatform(zoneId).getSubTaskForProcessor(t).getStatus() != ISubTask.SubTaskStatus.FINISHED) {
 				getLog().v("Pause Task "+t+".");
-				G.get().getPlatform(platformId).getSubTaskForProcessor(t).pause();
+				G.get().getPlatform(zoneId).getSubTaskForProcessor(t).pause();
 			}
 		}
 	}
@@ -256,7 +256,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		for(SubTaskId t: currentRunningTasks) {
 			getLog().v("Run Task "+t+".");
 			try {
-				G.get().getPlatform(platformId).getSubTaskForProcessor(t).run();
+				G.get().getPlatform(zoneId).getSubTaskForProcessor(t).run();
 			} catch (Exception e) {
 				getLog().e("Exception caught while trying to run all tasks",e);
 			}

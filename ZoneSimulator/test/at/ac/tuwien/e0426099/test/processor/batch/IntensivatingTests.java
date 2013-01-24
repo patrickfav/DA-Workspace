@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.test.processor.batch;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public class IntensivatingTests extends AProcessorTest{
 
 
 	private void testSubTaskStartShouldFinish(int tasks, int subtasksPerTask) {
-		PlatformId id = G.get().addPlatform("local",defaultDualCoreUnit);
+		ZoneId id = G.get().addPlatform("local",defaultDualCoreUnit);
 
 		for(ITask t:generateFixedTasks(tasks,subtasksPerTask)) {
 			G.get().getPlatform(id).addTask(t);

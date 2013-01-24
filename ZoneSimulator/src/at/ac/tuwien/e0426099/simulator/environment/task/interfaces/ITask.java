@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.interfaces;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 
 import java.util.UUID;
 
@@ -13,7 +13,7 @@ public interface ITask {
 
 	public UUID getId();
 	public String getReadAbleName();
-	public void setPlatformId(PlatformId id);
+	public void setZoneId(ZoneId id);
 
 	public void addSubTask(ISubTask subTask);
 	public ISubTask getNextSubTask();

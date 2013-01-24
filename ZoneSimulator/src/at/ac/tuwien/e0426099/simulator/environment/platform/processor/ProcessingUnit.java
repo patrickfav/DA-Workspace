@@ -2,7 +2,7 @@ package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ActionWrapper;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements ProcessingUnitListener {
 
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private List<ProcessingCore> cores;
 	private IScheduler scheduler;
 
@@ -53,11 +53,11 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
         addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.ADD));
 	}
 
-	public synchronized void setPlatformId(PlatformId platformId) {
-		this.platformId = platformId;
-		this.memoryCallBack.setPlatformId(platformId);
+	public synchronized void setZoneId(ZoneId zoneId) {
+		this.zoneId = zoneId;
+		this.memoryCallBack.setZoneId(zoneId);
 		for(int i=0;i<cores.size();i++) {
-			cores.get(i).setPlatformId(platformId);
+			cores.get(i).setZoneId(zoneId);
 		}
 		getLog().refreshData();
 	}
@@ -75,20 +75,20 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
         sb.append(LogUtil.BR +LogUtil.h3("Finished Subtasks"));
         sb.append(LogUtil.emptyListText(finnishedSubTasks," - no tasks -"));
         for(SubTaskId id:finnishedSubTasks) {
-            sb.append(G.get().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
         }
 
         sb.append(LogUtil.BR +LogUtil.h3("Failed Subtasks"));
         sb.append(LogUtil.emptyListText(failedSubTasks, " - no tasks -"));
         for(SubTaskId id:failedSubTasks) {
-            sb.append(G.get().getPlatform(platformId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
         }
         return sb.toString();
     }
 
 	@Override
 	public String toString() {
-		return "["+platformId+"|CPU]";
+		return "["+ zoneId +"|CPU]";
 	}
 	/* ********************************************************************************** CALLBACKS */
 
@@ -154,11 +154,11 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 
 		while((dest=scheduler.getNext(getAllInfos())) != null) {
 			try {
-				getLog().d("next task to schedule: "+ G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()));
+				getLog().d("next task to schedule: "+ G.get().getPlatform(zoneId).getSubTaskForProcessor(dest.getSubTaskId()));
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
 				getLog().w("too many concurrent tasks! failing task.",e);
-				G.get().getPlatform(platformId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
+				G.get().getPlatform(zoneId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}
 		}

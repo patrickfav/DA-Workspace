@@ -1,8 +1,8 @@
 package at.ac.tuwien.e0426099.simulator.environment;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.Platform;
+import at.ac.tuwien.e0426099.simulator.environment.platform.Zone;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -22,14 +22,17 @@ public class G {
 	public static final boolean VERBOSE_LOG_MODE_SLEEPTHREAD = true;
 	public static final boolean VERBOSE_LOG_MODE_SCHEDULER = true;
 
+	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 20;
+	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 10;
+
     private Logger log = LogManager.getLogger(G.class.getName());
 
-	private ConcurrentHashMap<UUID,Platform> platforms;
+	private ConcurrentHashMap<UUID,Zone> zones;
 
 	private static G instance;
 
 	private G() {
-		platforms= new ConcurrentHashMap<UUID, Platform>();
+		zones = new ConcurrentHashMap<UUID, Zone>();
 	}
 
 	public static G get() {
@@ -46,20 +49,20 @@ public class G {
 		instance = null;
 	}
 
-	public Platform getPlatform(PlatformId id) {
-		return platforms.get(id.getId());
+	public Zone getPlatform(ZoneId id) {
+		return zones.get(id.getId());
 	}
 
-	public PlatformId addPlatform(String platformName, ProcessingUnit unit) {
-		PlatformId id = new PlatformId(platformName);
-		platforms.put(id.getId(),new Platform(id,unit));
+	public ZoneId addPlatform(String platformName, ProcessingUnit unit) {
+		ZoneId id = new ZoneId(platformName);
+		zones.put(id.getId(), new Zone(id, unit));
 		return id;
 	}
 
     public synchronized String getCompleteStatus(boolean detailed) {
         StringBuffer sb = new StringBuffer();
         sb.append(LogUtil.BR+LogUtil.BR+LogUtil.h1("Complete Status:"));
-        for(Platform p:platforms.values()) {
+        for(Zone p: zones.values()) {
             sb.append(p.getCompleteStatus(detailed));
         }
         sb.append(LogUtil.HR1+ LogUtil.BR);
@@ -67,7 +70,7 @@ public class G {
     }
 
     public void start() {
-        for(Platform p:platforms.values()) {
+        for(Zone p: zones.values()) {
             p.start();
         }
 		log.info(LogUtil.HR2);
@@ -76,7 +79,7 @@ public class G {
     }
 
     public void pause() {
-        for(Platform p:platforms.values()) {
+        for(Zone p: zones.values()) {
             p.pause();
         }
 		log.info(LogUtil.HR2);
@@ -84,7 +87,7 @@ public class G {
     }
 
     public void resume() {
-        for(Platform p:platforms.values()) {
+        for(Zone p: zones.values()) {
             p.resumeExec();
         }
 		log.info("RESUME");
@@ -93,7 +96,7 @@ public class G {
 
     public boolean waitForFinish() {
         //wait for tasks to finish
-        for(Platform p:platforms.values()) {
+        for(Zone p: zones.values()) {
             p.waitForFinish();
         }
         log.info(getCompleteStatus(true));

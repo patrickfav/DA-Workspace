@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.test.processor.single;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;
 import org.apache.log4j.LogManager;
@@ -26,7 +26,7 @@ public class ConfigAbleTest1 extends AProcessorTest{
 
 	@Test(timeout = 180000)
 	public void testSubTaskStartShouldFinish() {
-		PlatformId id = G.get().addPlatform("local",defaultDualCoreUnit);
+		ZoneId id = G.get().addPlatform("local",defaultDualCoreUnit);
 
 		for(ITask t:taskList) {
 			G.get().getPlatform(id).addTask(t);

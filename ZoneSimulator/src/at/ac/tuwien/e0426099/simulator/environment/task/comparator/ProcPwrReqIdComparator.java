@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 import java.util.Comparator;
@@ -11,15 +11,15 @@ import java.util.Comparator;
  * @since 07.12.12
  */
 public class ProcPwrReqIdComparator implements Comparator<SubTaskId> {
-	private PlatformId platformId;
+	private ZoneId zoneId;
 
-	public ProcPwrReqIdComparator(PlatformId platformId) {
-		this.platformId = platformId;
+	public ProcPwrReqIdComparator(ZoneId zoneId) {
+		this.zoneId = zoneId;
 	}
 
 	@Override
 	public int compare(SubTaskId o1, SubTaskId o2) {
-		return new Long(G.get().getPlatform(platformId).getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs())
-				.compareTo(G.get().getPlatform(platformId).getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
+		return new Long(G.get().getPlatform(zoneId).getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs())
+				.compareTo(G.get().getPlatform(zoneId).getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
 	}
 }

@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 /**
@@ -10,17 +10,17 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
  */
 public class TaskInMemory {
 	private SubTaskId subTaskId;
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private MemoryAmount amountAssignedToMemory;
 	private MemoryAmount amountNotAssignable;
 	private boolean somethingHasChanged;
 
-	public TaskInMemory(PlatformId platformId,SubTaskId subTaskId, MemoryAmount amountAssignedToMemory, MemoryAmount amountNotAssignable) {
+	public TaskInMemory(ZoneId zoneId,SubTaskId subTaskId, MemoryAmount amountAssignedToMemory, MemoryAmount amountNotAssignable) {
 		this.subTaskId = subTaskId;
 		this.amountAssignedToMemory = amountAssignedToMemory;
 		this.amountNotAssignable = amountNotAssignable;
 		somethingHasChanged=false;
-		this.platformId =platformId;
+		this.zoneId = zoneId;
 	}
 
 	public SubTaskId getSubTaskId() {
@@ -62,6 +62,6 @@ public class TaskInMemory {
 	 * @return [0.0,1.0]
 	 */
 	public double getRatioNotAssigned() {
-		return (double) amountNotAssignable.getAmountInKiloByte() / (double) G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
+		return (double) amountNotAssignable.getAmountInKiloByte() / (double) G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
 	}
 }

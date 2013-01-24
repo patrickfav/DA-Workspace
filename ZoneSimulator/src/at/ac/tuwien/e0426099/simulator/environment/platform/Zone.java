@@ -19,26 +19,26 @@ import java.util.concurrent.Executors;
  * @author PatrickF
  * @since 08.12.12
  */
-public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitListener {
+public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListener {
 
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private ExecutorService threadPool;
 	private ConcurrentHashMap<UUID, ITask> taskMap;
 	private ProcessingUnit processingUnit;
 
-	public Platform(PlatformId platformId, ProcessingUnit unit) {
-		this.platformId = platformId;
+	public Zone(ZoneId zoneId, ProcessingUnit unit) {
+		this.zoneId = zoneId;
 		taskMap = new ConcurrentHashMap<UUID, ITask>();
 		threadPool = Executors.newCachedThreadPool();
 		processingUnit = unit;
-		processingUnit.setPlatformId(platformId);
+		processingUnit.setZoneId(zoneId);
 		processingUnit.setPlatformCallBack(this);
 		processingUnit.start();
 		getLog().refreshData();
 	}
 
 	public void addTask(ITask task) {
-		task.setPlatformId(platformId);
+		task.setZoneId(zoneId);
 		getLog().i("Add new Task: " + task);
 		taskMap.put(task.getId(), task);
 		addToWorkerQueue(task.getId());
@@ -54,12 +54,12 @@ public class Platform extends APauseAbleThread<UUID> implements ProcessingUnitLi
 
 	@Override
 	public String toString() {
-		return "[Platform|" + platformId + "]";
+		return "[Zone|" + zoneId + "]";
 	}
 
 	public synchronized String getCompleteStatus(boolean detailed) {
 		StringBuffer sb = new StringBuffer();
-		sb.append(LogUtil.BR + LogUtil.h2("Platform: " + this));
+		sb.append(LogUtil.BR + LogUtil.h2("Zone: " + this));
 		sb.append(processingUnit.getCompleteStatus(detailed));
 		return sb.toString();
 	}

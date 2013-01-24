@@ -3,7 +3,7 @@ package at.ac.tuwien.e0426099.simulator.environment.platform.memory;
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.TaskInMemory;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.TaskManagementMemoryListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
@@ -19,7 +19,7 @@ import java.util.List;
 public class WorkingMemory implements TaskManagementMemoryListener {
 	private static final boolean SHUFFLING_TASKS_BEFORE_ASSIGNMENT = true;
 
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private double memoryNotAssignedPenalityMultiplicator; //to configure penality for too low ram
 	private MemoryAmount sizeOfMemory;
 	private List<TaskInMemory> taskInMemoryList;
@@ -59,8 +59,8 @@ public class WorkingMemory implements TaskManagementMemoryListener {
 		memoryListeners.add(l);
 	}
 
-	public void setPlatformId(PlatformId platformId) {
-		this.platformId = platformId;
+	public void setZoneId(ZoneId zoneId) {
+		this.zoneId = zoneId;
 	}
 
 	/* ********************************************************************************** PRIVATE */
@@ -68,18 +68,18 @@ public class WorkingMemory implements TaskManagementMemoryListener {
 	private void addSubTask(SubTaskId subTaskId) {
 		TaskInMemory tim;
 		if(getFreeMemory().getAmountInKiloByte() > 0) { //has some free mem to give
-			if(getFreeMemory().getAmountInKiloByte() >= G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
-				tim = new TaskInMemory(platformId,subTaskId, G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
+			if(getFreeMemory().getAmountInKiloByte() >= G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
+				tim = new TaskInMemory(zoneId,subTaskId, G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
 			} else { //can only assign the rest of free mem
-				tim = new TaskInMemory(platformId,subTaskId,getFreeMemory(),
-						new MemoryAmount(G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
+				tim = new TaskInMemory(zoneId,subTaskId,getFreeMemory(),
+						new MemoryAmount(G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
 			}
 		} else { //no memory to give
-			tim = new TaskInMemory(platformId,subTaskId,new MemoryAmount(0), G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).getMemoryDemand());
+			tim = new TaskInMemory(zoneId,subTaskId,new MemoryAmount(0), G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand());
 		}
 		tim.markChanged();
 		taskInMemoryList.add(tim);
-		G.get().getPlatform(platformId).getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
+		G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
 	}
 
 	private synchronized MemoryAmount getUsedMemory() {

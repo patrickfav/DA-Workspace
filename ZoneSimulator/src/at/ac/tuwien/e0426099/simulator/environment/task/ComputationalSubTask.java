@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingRequirements;
 import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author PatrickF
@@ -31,7 +32,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	private Log log = new Log(this,G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_SUBTASK);
 
 	private SubTaskId id;
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private String readAbleName;
 	private volatile SubTaskStatus status;
 	private TaskType type;
@@ -44,6 +45,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	private Exception exception;
 	private Future futureRefForThread;
 	private Semaphore startStopSemaphore;
+	private Semaphore pauseSemaphore;
 	private Semaphore checkOnFinishSemaphore;
 
 	public ComputationalSubTask(String readAbleName, MemoryAmount neededForExecution, Long maxComputationalUtilization, Long computationsNeededForFinishing) {
@@ -56,7 +58,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		requirements = new ProcessingRequirements(new RawProcessingPower(maxComputationalUtilization),computationsNeededForFinishing);
 		taskWorkManager = new TaskWorkManager(requirements);
 		listeners = new ArrayList<ITaskListener>();
-		startStopSemaphore = new Semaphore(0, true); //initialise with 0, so first aquire waits
+		startStopSemaphore = new Semaphore(1, true);
+		pauseSemaphore = new Semaphore(1, true);
 		checkOnFinishSemaphore =new Semaphore(1,true);
 		log.refreshData();
 		log.i("Task created [Type:"+type+", MinExecTime: "+requirements.getMinimumExecutionTimeMs()+"ms, MemDemand: "+memoryDemand+"]");
@@ -78,53 +81,60 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		id.upadteParentId(parentTaskId);
 	}
 
-	public PlatformId getPlatformId() {
-		return platformId;
+	public ZoneId getZoneId() {
+		return zoneId;
 	}
 
 	@Override
-	public void setPlatformId(PlatformId id) {
-		platformId = id;
+	public void setZoneId(ZoneId id) {
+		zoneId = id;
 		log.refreshData();
 	}
 
 	@Override
 	public void pause() {
+		aquireSempahore(startStopSemaphore,"pausePause()");
+		aquireSempahore(checkOnFinishSemaphore,"checkFinishPause()");
 		if(status == SubTaskStatus.RUNNING) {
 			setStatus(SubTaskStatus.PAUSED);
 			interruptExecThread();
-			aquireSempahore(startStopSemaphore,"startStopPause()");
+			aquireSempahore(pauseSemaphore,"startStopPause()");
 		} else {
 			log.w("Can't pause while not running");
 		}
+		releaseSempahore(checkOnFinishSemaphore,"checkFinishPause()");
+		releaseSempahore(startStopSemaphore,"pausePause()");
 	}
 
 	@Override
 	public void run() {
+		aquireSempahore(pauseSemaphore,"pauseRun()");
+		aquireSempahore(checkOnFinishSemaphore,"checkFinishRun()");
         if(status == SubTaskStatus.FINISHED) {
             log.w("This seems to be a conccurrent error, nothing to worry about that much: try to run in FINISH state. The run attempt will be ignored.");
         } else {
-            aquireSempahore(checkOnFinishSemaphore,"checkFinishRun()");
+
             if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
                 setStatus(SubTaskStatus.RUNNING);
-                futureRefForThread = G.get().getPlatform(platformId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
+                futureRefForThread = G.get().getPlatform(zoneId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
             } else {
                 throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+ toString());
             }
-            aquireSempahore(startStopSemaphore,"startStopRun()");
-            releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
+			aquireSempahore(startStopSemaphore,"startStopRun()");
         }
+		releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
+		releaseSempahore(pauseSemaphore,"pauseRun()");
 	}
 
 	@Override
 	public void fail(Exception e) {
-		aquireSempahore(checkOnFinishSemaphore,"checkFinsihFail()");
+		aquireSempahore(checkOnFinishSemaphore, "checkFinsihFail()");
 		log.i("Task failed. ["+e.getClass().getSimpleName()+"]");
 		setStatus(SubTaskStatus.SIMULATED_ERROR);
 		exception=e;
 		interruptExecThread();
-		aquireSempahore(startStopSemaphore,"startStopFail()");
-		releaseSempahore(checkOnFinishSemaphore,"checkFinsihFail()");
+		aquireSempahore(startStopSemaphore, "startStopFail()");
+		releaseSempahore(checkOnFinishSemaphore, "checkFinsihFail()");
 	}
 
 	@Override
@@ -147,12 +157,12 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			throw new RunOnIllegalStateException("Trying to start while still running (Status: "+status+") in task "+ toString());
 		}
 		log.i("Start task. Estimated time to finish: " + timeToSleep+"ms");
-		releaseSempahore(startStopSemaphore,"startStopExecRun");
+		releaseSempahore(startStopSemaphore, "startStopExecRun");
 	}
 
 	@Override
 	public void onExecFinished() {
-		aquireSempahore(checkOnFinishSemaphore,"checkFinishOnExecFinsish");
+		aquireSempahore(checkOnFinishSemaphore, "checkFinishOnExecFinsish");
 		taskWorkManager.stopCurrentProcessing();
 		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
 			log.i("Task Finished. [Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms," +
@@ -160,7 +170,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			setStatus(SubTaskStatus.FINISHED);
 		}
 
-		releaseSempahore(checkOnFinishSemaphore,"checkFinishOnExecFinsish");
+		releaseSempahore(checkOnFinishSemaphore, "checkFinishOnExecFinsish");
 
 		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
 			callAllListenerFinished();
@@ -175,7 +185,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		} else {
 			log.w("Task interrupted but not from our Framework, that's strange. Status: "+status);
 		}
-		releaseSempahore(startStopSemaphore,"startStopExecInterrupt");
+		releaseSempahore(pauseSemaphore, "startStopExecInterrupt");
 	}
 
 	@Override
@@ -184,7 +194,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
 		log.e("Exception thrown while executing Thread",e);
-		releaseSempahore(startStopSemaphore,"startStopExecException");
+		releaseSempahore(startStopSemaphore, "startStopExecException");
 		callAllListenerFailed();
 	}
 
@@ -228,7 +238,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
     @Override
     public String toString() {
-        return "["+platformId+"|"+type+"|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"|"+status+"]";
+        return "["+ zoneId +"|"+type+"|"+readAbleName+"/"+id.getSubTaskId().toString().substring(0,5)+"|"+status+"]";
     }
 
     public synchronized String getCompleteStatus(boolean detailed) {
@@ -251,7 +261,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		log.v("interrupt called");
 		if(futureRefForThread != null) {
 			if(!futureRefForThread.cancel(true)) {
-				releaseSempahore(startStopSemaphore,"startStopInterrupt"); //release if it cant be canceled, since it would never get to callbacks
+				releaseSempahore(startStopSemaphore, "startStopInterrupt"); //release if it cant be canceled, since it would never get to callbacks
 			}
 		}
 		futureRefForThread =null; //can only interrupt once
@@ -275,8 +285,12 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	private void aquireSempahore(Semaphore s, String msg) {
         log.v("Start acquiring semaphore: "+msg);
-        s.acquireUninterruptibly();
-        log.v("Done acquiring "+msg);
+		try {
+			s.tryAcquire(G.SUBTASK_WAIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			log.v("Interrupt while waiting for semaphore "+msg);
+		}
+		log.v("Done acquiring "+msg);
 	}
 
 	private void releaseSempahore(Semaphore s, String msg) {

@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.simulator.util.Log;
@@ -16,7 +16,7 @@ public class Task implements ITask{
 	private Log log = new Log(this,G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_TASK);
 
 	private UUID id;
-	private PlatformId platformId;
+	private ZoneId zoneId;
 	private String readAbleName;
 	private Map<UUID,ISubTask> subTasks;
 	private List<UUID> subTaskOrder;
@@ -99,10 +99,10 @@ public class Task implements ITask{
 	}
 
 	@Override
-	public void setPlatformId(PlatformId id) {
-		platformId=id;
+	public void setZoneId(ZoneId id) {
+		zoneId =id;
 		for(ISubTask st: subTasks.values()) {
-			st.setPlatformId(id);
+			st.setZoneId(id);
 		}
 		log.refreshData();
 	}
@@ -114,7 +114,7 @@ public class Task implements ITask{
 
     @Override
     public String toString() {
-		return "["+platformId+"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"|"+status+"]";
+		return "["+ zoneId +"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"|"+status+"]";
     }
     /* ***************************************************************************** PRIVATES */
 

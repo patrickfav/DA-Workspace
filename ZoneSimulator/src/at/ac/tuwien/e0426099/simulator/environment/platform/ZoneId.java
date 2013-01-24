@@ -6,11 +6,11 @@ import java.util.UUID;
  * @author PatrickF
  * @since 18.01.13
  */
-public class PlatformId {
+public class ZoneId {
 	private UUID id;
 	private String name;
 
-	public PlatformId(String name) {
+	public ZoneId(String name) {
 		this.id = UUID.randomUUID();
 		this.name = name;
 	}
@@ -33,7 +33,7 @@ public class PlatformId {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		PlatformId that = (PlatformId) o;
+		ZoneId that = (ZoneId) o;
 
 		if (id != null ? !id.equals(that.id) : that.id != null) return false;
 		if (name != null ? !name.equals(that.name) : that.name != null) return false;

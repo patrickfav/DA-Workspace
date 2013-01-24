@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.interfaces;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.PlatformId;
+import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 
@@ -17,7 +17,7 @@ public interface ISubTask {
 	public SubTaskId getSubTaskId();
 	public String getReadAbleName();
 	public void setParentId(UUID id);
-	public void setPlatformId(PlatformId id);
+	public void setZoneId(ZoneId id);
 
 	public void pause();
 	public void run();
