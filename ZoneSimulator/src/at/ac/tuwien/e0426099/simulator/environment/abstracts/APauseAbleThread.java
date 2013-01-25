@@ -75,15 +75,15 @@ public abstract class APauseAbleThread<T> extends Thread {
 		workSwitch = false;
 	}
 
-    public void addToWorkerQueue(T obj) {
+    protected void addToWorkerQueue(T obj) {
         workerQueue.add(obj);
     }
 
-    public boolean checkIfThereWillBeAnyWork() {
+	protected boolean checkIfThereWillBeAnyWork() {
 		return workSwitch;
 	}
-    public abstract void doTheWork(T input);
-	public abstract void onAllDone();
+	protected abstract void doTheWork(T input);
+	protected abstract void onAllDone();
 
 	public void waitForFinish() {
 		log.d("[Sync] wait for task to finish");
@@ -94,7 +94,7 @@ public abstract class APauseAbleThread<T> extends Thread {
 		}
 	}
 
-	public Log getLog() {
+	protected Log getLog() {
 		return log;
 	}
 

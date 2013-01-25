@@ -51,11 +51,11 @@ public class G {
 		instance = null;
 	}
 
-	public Zone getPlatform(ZoneId id) {
+	public Zone getZone(ZoneId id) {
 		return zones.get(id.getId());
 	}
 
-	public ZoneId addPlatform(String platformName, ProcessingUnit unit) {
+	public ZoneId addZone(String platformName, ProcessingUnit unit) {
 		ZoneId id = new ZoneId(platformName);
 		zones.put(id.getId(), new Zone(id, unit));
 		return id;

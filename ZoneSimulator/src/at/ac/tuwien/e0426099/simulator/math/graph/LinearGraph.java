@@ -4,7 +4,9 @@ import at.ac.tuwien.e0426099.simulator.math.Point;
 import at.ac.tuwien.e0426099.simulator.math.PointXComparator;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is a linear graph represented by the added points.
@@ -15,13 +17,15 @@ import java.util.List;
  * return that extreme, making it practicaly a straigt line from -inifinte to point1
  * and from point2 to +infinite.
  *
+ * Adds a cache for performance enhancements
+ *
  * @author PatrickF
  * @since 25.01.13
  */
 public class LinearGraph {
 
 	private List<Point> points;
-
+	private Map<Double,Double> cache;
 	/**
 	 * Will create the graph
 	 *
@@ -30,6 +34,7 @@ public class LinearGraph {
 	 */
 	public LinearGraph(double mean) {
 		points.add(new Point(0,mean));
+		cache=new HashMap<Double, Double>();
 	}
 
 	/**
@@ -39,6 +44,7 @@ public class LinearGraph {
 	public void addPoint(Point p) {
 		points.add(p);
 		Collections.sort(points,new PointXComparator());
+		cache=new HashMap<Double, Double>(); //clear cache after adding new node
 	}
 
 	/**
@@ -52,6 +58,8 @@ public class LinearGraph {
 				return points.get(0).getY();
 			} else if(x >= points.get(points.size()).getX()) { //if there is no point beyond smallest, return max
 				return  points.get(points.size()).getY();
+			} else if(cache.containsKey(x)) {
+				return cache.get(x); //return answer from cache
 			} else {
 				for(int i=0;i<points.size();i++) {
 					if(points.get(i).getX() >= x) { //got the point right to x, so take this and the next left
@@ -73,7 +81,7 @@ public class LinearGraph {
 	 * @return
 	 */
 	private double getY(Point p1, Point p2, double x) {
-		return p1.getY()+((p2.getY()-p1.getY()) /(p2.getX()-p1.getX())) * (x - p1.getX());
+		return cache.put(x,p1.getY()+((p2.getY()-p1.getY()) /(p2.getX()-p1.getX())) * (x - p1.getX()));
 	}
 
 }

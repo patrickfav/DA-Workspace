@@ -17,7 +17,7 @@ public class SimplePauseTest1 extends AProcessorTest{
 
 	@Test(timeout = 60000)
 	public void testSubTaskStartShouldFinish() {
-		ZoneId id = G.get().addPlatform("local",defaultDualCoreUnit);
+		ZoneId id = G.get().addZone("local", defaultDualCoreUnit);
 
 		ITask task1 = new Task("No1");
 
@@ -29,8 +29,8 @@ public class SimplePauseTest1 extends AProcessorTest{
 		task2.addSubTask(subTask2);
 		task2.addSubTask(subTask5);
 
-		G.get().getPlatform(id).addTask(task1);
-		G.get().getPlatform(id).addTask(task2);
+		G.get().getZone(id).addTask(task1);
+		G.get().getZone(id).addTask(task2);
 
 		G.get().start();
 

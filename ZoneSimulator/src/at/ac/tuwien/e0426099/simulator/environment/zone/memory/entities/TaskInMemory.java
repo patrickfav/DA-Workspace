@@ -62,6 +62,6 @@ public class TaskInMemory {
 	 * @return [0.0,1.0]
 	 */
 	public double getRatioNotAssigned() {
-		return (double) amountNotAssignable.getAmountInKiloByte() / (double) G.get().getPlatform(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
+		return (double) amountNotAssignable.getAmountInKiloByte() / (double) G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
 	}
 }

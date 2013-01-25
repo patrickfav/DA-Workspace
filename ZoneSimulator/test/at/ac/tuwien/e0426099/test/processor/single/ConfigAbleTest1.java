@@ -26,10 +26,10 @@ public class ConfigAbleTest1 extends AProcessorTest{
 
 	@Test(timeout = 180000)
 	public void testSubTaskStartShouldFinish() {
-		ZoneId id = G.get().addPlatform("local",defaultDualCoreUnit);
+		ZoneId id = G.get().addZone("local", defaultDualCoreUnit);
 
 		for(ITask t:taskList) {
-			G.get().getPlatform(id).addTask(t);
+			G.get().getZone(id).addTask(t);
 		}
 
 		G.get().start();

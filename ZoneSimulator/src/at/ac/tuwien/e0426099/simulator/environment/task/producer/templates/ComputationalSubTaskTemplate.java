@@ -1,5 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.producer.templates;
 
+import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.math.distributions.IRandomDistribution;
 
 /**
@@ -33,5 +34,10 @@ public class ComputationalSubTaskTemplate implements ISubTaskTemplate {
 
 	public IRandomDistribution getComputationsNeededForFinishing() {
 		return computationsNeededForFinishing;
+	}
+
+	@Override
+	public ISubTask.TaskType getTaskType() {
+		return ISubTask.TaskType.PROCESSING;
 	}
 }

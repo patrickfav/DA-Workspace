@@ -1,6 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.TaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
@@ -32,6 +33,10 @@ public class Task implements ITask{
 		currentSubTask=-1;
 		setStatus(TaskStatus.NOT_STARTED);
 		log.refreshData();
+	}
+
+	public Task(TaskTemplate template) {
+		this(template.getReadAblenName());
 	}
 
 	public void addSubTask(ISubTask subTask) {
@@ -119,7 +124,7 @@ public class Task implements ITask{
 		sb.append(LogUtil.emptyListText(subTaskOrder," - no tasks -"));
 		if(detailed) {
 			for(UUID id:subTaskOrder) {
-				sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(subTasks.get(id).getSubTaskId()).getCompleteStatus(detailed)+LogUtil.BR);
+				sb.append(G.get().getZone(zoneId).getSubTaskForProcessor(subTasks.get(id).getSubTaskId()).getCompleteStatus(detailed)+LogUtil.BR);
 			}
 		}
 		return sb.toString();

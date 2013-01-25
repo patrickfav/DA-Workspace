@@ -15,7 +15,11 @@ public class Log {
 
 	public Log(Object obj, boolean showVerbose) {
 		this.showVerbose =showVerbose;
-		setLogTag(obj,obj.getClass().getSimpleName());
+		try {
+			setLogTag(obj,obj.toString());
+		} catch(NullPointerException e) {
+			setLogTag(obj,obj.getClass().getSimpleName());
+		}
 	}
 
 	public void setLogTag(Object obj, String tag) {

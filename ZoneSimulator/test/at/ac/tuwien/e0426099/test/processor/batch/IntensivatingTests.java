@@ -60,10 +60,10 @@ public class IntensivatingTests extends AProcessorTest{
 
 
 	private void testSubTaskStartShouldFinish(int tasks, int subtasksPerTask) {
-		ZoneId id = G.get().addPlatform("local",defaultDualCoreUnit);
+		ZoneId id = G.get().addZone("local", defaultDualCoreUnit);
 
 		for(ITask t:generateFixedTasks(tasks,subtasksPerTask)) {
-			G.get().getPlatform(id).addTask(t);
+			G.get().getZone(id).addTask(t);
 		}
 
 		G.get().start();

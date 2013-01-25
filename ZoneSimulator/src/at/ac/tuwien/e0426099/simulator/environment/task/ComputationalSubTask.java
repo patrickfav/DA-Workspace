@@ -1,6 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.ComputationalSubTaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingRequirements;
@@ -76,6 +77,17 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		failSemaphore=new Semaphore(1,true);
 	}
 
+	/**
+	 * Create from temlpate
+	 * @param template
+	 */
+	public ComputationalSubTask(ComputationalSubTaskTemplate template) {
+		this(template.getReadAbleName(),
+				new MemoryAmount(template.getNeededMemoryInKiB().getNext().longValue()),
+				template.getMaxComputationalUtilization().getNext().longValue(),
+				template.getComputationsNeededForFinishing().getNext().longValue());
+	}
+
 	@Override
 	public SubTaskId getSubTaskId() {
 		return id;
@@ -129,7 +141,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
             if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
                 setStatus(SubTaskStatus.RUNNING);
-                futureRefForThread = G.get().getPlatform(zoneId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
+                futureRefForThread = G.get().getZone(zoneId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
             } else {
                 throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+ toString());
             }
