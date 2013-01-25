@@ -1,10 +1,12 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities;
 
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 import java.util.UUID;
 
 /**
+ * Wraps the subtask and the core where it needs to go
+ *
  * @author PatrickF
  * @since 07.12.12
  */

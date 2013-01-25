@@ -1,14 +1,14 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ActionWrapper;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.TaskManagementMemoryListener;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler.IScheduler;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ActionWrapper;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.CoreDestination;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.listener.TaskManagementMemoryListener;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A simulation of a CPU, which pretty much is responsibly for scheduling tasks upon its cores
+ *
  * @author PatrickF
  * @since 07.12.12
  */
@@ -75,13 +77,13 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
         sb.append(LogUtil.BR +LogUtil.h3("Finished Subtasks"));
         sb.append(LogUtil.emptyListText(finnishedSubTasks," - no tasks -"));
         for(SubTaskId id:finnishedSubTasks) {
-            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(false)+LogUtil.BR);
         }
 
         sb.append(LogUtil.BR +LogUtil.h3("Failed Subtasks"));
         sb.append(LogUtil.emptyListText(failedSubTasks, " - no tasks -"));
         for(SubTaskId id:failedSubTasks) {
-            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(detailed)+LogUtil.BR);
+            sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(id).getCompleteStatus(false)+LogUtil.BR);
         }
         return sb.toString();
     }
@@ -103,6 +105,7 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 
     @Override
     public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+		getLog().d("task failed in "+c.getCoreName()+", spreading the word: "+subTaskId);
 		failedSubTasks.add(subTaskId);
         addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
         platformCallBack.onTaskFailed(c, subTaskId);
@@ -114,8 +117,8 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 		getWorkLock().lock();
 		if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
 			scheduler.addToQueue(input.getSubTaskId());
-			scheduleTasks();
 		}
+		scheduleTasks();
 		getWorkLock().unlock();
 	}
 

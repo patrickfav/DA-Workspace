@@ -1,7 +1,7 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.scheduler;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.CoreDestination;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.CoreDestination;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingCoreInfo;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 import java.util.List;

@@ -1,10 +1,12 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.entities;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
 
 import java.util.Date;
 
 /**
+ * Represents a working intervall
+ *
  * @author PatrickF
  * @since 09.12.12
  */
@@ -46,6 +48,11 @@ public class ProcessingSlice {
 		return null;
 	}
 
+	/**
+	 * This will return the computations that has been done in this interval.
+	 * If still in progress will return 0
+	 * @return
+	 */
 	public long getActualComputationsDone() {
 		if(!isStillProcessing()) {
 			return givenProcessingPower.getComputationsDone(getActualTimeSpendOnComputation());
@@ -54,6 +61,10 @@ public class ProcessingSlice {
 		}
 	}
 
+	/**
+	 * Return ms duration for this interval
+	 * @return
+	 */
 	public long getActualTimeSpendOnComputation() {
 		if(startTime != null && !isStillProcessing()) {
 			return endTime.getTime() - startTime.getTime();

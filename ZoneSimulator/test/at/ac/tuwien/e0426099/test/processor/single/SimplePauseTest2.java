@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.test.processor.single;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.Task;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;

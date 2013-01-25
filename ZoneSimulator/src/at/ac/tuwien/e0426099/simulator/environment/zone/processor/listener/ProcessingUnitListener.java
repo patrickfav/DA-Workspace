@@ -1,6 +1,6 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.listener;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingCore;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingCore;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 /**

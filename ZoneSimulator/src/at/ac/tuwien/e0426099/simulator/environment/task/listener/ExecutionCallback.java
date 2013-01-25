@@ -1,6 +1,8 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.listener;
 
 /**
+ * Used by the execution thread
+ *
  * @author PatrickF
  * @since 09.12.12
  */

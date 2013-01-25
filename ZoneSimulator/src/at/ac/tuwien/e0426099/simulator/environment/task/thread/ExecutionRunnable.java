@@ -5,6 +5,8 @@ import at.ac.tuwien.e0426099.simulator.environment.task.listener.ExecutionCallba
 import at.ac.tuwien.e0426099.simulator.util.Log;
 
 /**
+ * This is the actual "execution" which will be simulated by a sleep
+ *
  * @author PatrickF
  * @since 09.12.12
  */

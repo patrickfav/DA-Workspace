@@ -1,6 +1,7 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities;
 
 /**
+ * Wrapper for computations for a given time (ms in this case)
  * @author PatrickF
  * @since 07.12.12
  */

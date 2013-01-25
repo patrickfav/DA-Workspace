@@ -3,6 +3,9 @@ package at.ac.tuwien.e0426099.simulator.environment.task.entities;
 import java.util.UUID;
 
 /**
+ * Wraps the subtask uuid and its parent id
+ *
+ * There is a special value parent id uuid when no parent has been specified
  * @author PatrickF
  * @since 08.12.12
  */

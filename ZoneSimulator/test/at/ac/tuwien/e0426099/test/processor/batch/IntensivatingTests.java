@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.test.processor.batch;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;
 import org.junit.Test;
@@ -52,9 +52,9 @@ public class IntensivatingTests extends AProcessorTest{
 		testSubTaskStartShouldFinish(3,8);
 	}
 
-	@Test(timeout = 60000)
+	@Test(timeout = 180000)
 	public void testSubTaskStartShouldFinish20x2() {
-		testSubTaskStartShouldFinish(20,2);
+		testSubTaskStartShouldFinish(40,3);
 	}
 
 

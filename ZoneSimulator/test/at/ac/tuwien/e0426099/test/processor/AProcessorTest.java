@@ -1,12 +1,12 @@
 package at.ac.tuwien.e0426099.test.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingCore;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.scheduler.FifoLeastLoadScheduler;
+import at.ac.tuwien.e0426099.simulator.environment.zone.memory.WorkingMemory;
+import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingCore;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.scheduler.FifoLeastLoadScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.Task;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
@@ -44,8 +44,8 @@ public abstract class AProcessorTest extends AZoneSimTest {
 
 
 		WorkingMemory memory = new WorkingMemory(new MemoryAmount(4 * 100 * 1000),0.5);
-		ProcessingCore core1 = new ProcessingCore(new RawProcessingPower(1000),10,0.05);
-		ProcessingCore core2 = new ProcessingCore(new RawProcessingPower(1500),10,0.07);
+		ProcessingCore core1 = new ProcessingCore(new RawProcessingPower(1000),10,0.03);
+		ProcessingCore core2 = new ProcessingCore(new RawProcessingPower(1500),10,0.05);
 
 		List<ProcessingCore> cores = new ArrayList<ProcessingCore>();
 		cores.add(core1);

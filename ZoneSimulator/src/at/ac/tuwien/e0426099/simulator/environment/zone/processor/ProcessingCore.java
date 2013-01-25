@@ -1,13 +1,13 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.WorkingMemory;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ActionWrapper;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.memory.WorkingMemory;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ActionWrapper;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingCoreInfo;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.listener.ProcessingUnitListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcPwrReqIdComparator;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * A cores is responsibly for running the subtask. A core can execute multiple subtasks at the same time (configurable)
  * @author PatrickF
  * @since 07.12.12
  */
@@ -89,6 +90,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
         return maxConcurrentTasks;
     }
 
+	@Override
 	public UUID getCoreId() {
 		return id;
 	}
@@ -183,6 +185,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 
     @Override
     public void onTaskFailed(SubTaskId subTaskId) {
+		getLog().d("Task onFail called by " + subTaskId);
 		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
 		processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
     }

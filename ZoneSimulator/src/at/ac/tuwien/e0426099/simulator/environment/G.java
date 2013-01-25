@@ -1,8 +1,8 @@
 package at.ac.tuwien.e0426099.simulator.environment;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.Zone;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.Zone;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -11,19 +11,21 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * This is the God class - a singelton managing all zones
+ *
  * @author PatrickF
  * @since 18.01.13
  */
 public class G {
-	public static final boolean VERBOSE_LOG_MODE_GENERAL = false;
+	public static final boolean VERBOSE_LOG_MODE_GENERAL = true;
 	public static final boolean VERBOSE_LOG_MODE_SUBTASK = true;
 	public static final boolean VERBOSE_LOG_MODE_TASK = true;
 	public static final boolean VERBOSE_LOG_MODE_SYNCTHREAD = true;
 	public static final boolean VERBOSE_LOG_MODE_SLEEPTHREAD = true;
 	public static final boolean VERBOSE_LOG_MODE_SCHEDULER = true;
 
-	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 20;
-	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 10;
+	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 200;
+	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 100;
 
     private Logger log = LogManager.getLogger(G.class.getName());
 
@@ -70,28 +72,33 @@ public class G {
     }
 
     public void start() {
-        for(Zone p: zones.values()) {
-            p.start();
-        }
-		log.info(LogUtil.HR2);
+    	log.info(LogUtil.HR2);
 		log.info("START");
 		log.info(LogUtil.HR2);
+
+		for(Zone p: zones.values()) {
+			p.start();
+		}
     }
 
     public void pause() {
+
+		log.info(LogUtil.HR2);
+		log.info("PAUSE");
+
         for(Zone p: zones.values()) {
             p.pause();
         }
-		log.info(LogUtil.HR2);
-		log.info("PAUSE");
+
     }
 
     public void resume() {
+		log.info("RESUME");
+		log.info(LogUtil.HR2);
+
         for(Zone p: zones.values()) {
             p.resumeExec();
         }
-		log.info("RESUME");
-		log.info(LogUtil.HR2);
     }
 
     public boolean waitForFinish() {

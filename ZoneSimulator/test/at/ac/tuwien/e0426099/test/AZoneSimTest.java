@@ -19,4 +19,8 @@ public abstract class AZoneSimTest {
 	protected long getFixedLongInRange(long min, long max) {
 		return min + (int)(fixedRandom.nextDouble() * ((max - min) + 1));
 	}
+
+	protected long getFixedLongGaussian(long mean, long std_deviance) {
+		return (long) fixedRandom.nextGaussian() * std_deviance + mean;
+	}
 }

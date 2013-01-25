@@ -1,10 +1,11 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.simulator.util.Log;
+import at.ac.tuwien.e0426099.simulator.util.LogUtil;
 
 import java.util.*;
 
@@ -111,7 +112,18 @@ public class Task implements ITask{
     public boolean isFinishedExecuting() {
         return status == TaskStatus.FINISHED || status == TaskStatus.ERROR;
     }
+	public synchronized String getCompleteStatus(boolean detailed) {
+		StringBuffer sb = new StringBuffer();
 
+		sb.append(LogUtil.BR +LogUtil.h4("TASK: "+this.toString()));
+		sb.append(LogUtil.emptyListText(subTaskOrder," - no tasks -"));
+		if(detailed) {
+			for(UUID id:subTaskOrder) {
+				sb.append(G.get().getPlatform(zoneId).getSubTaskForProcessor(subTasks.get(id).getSubTaskId()).getCompleteStatus(detailed)+LogUtil.BR);
+			}
+		}
+		return sb.toString();
+	}
     @Override
     public String toString() {
 		return "["+ zoneId +"|Task|"+readAbleName+"/"+id.toString().substring(0,5)+"|"+status+"]";

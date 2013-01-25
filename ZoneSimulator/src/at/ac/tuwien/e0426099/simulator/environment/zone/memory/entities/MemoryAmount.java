@@ -1,4 +1,4 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities;
+package at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities;
 
 /**
  * Represents amount of Memory

@@ -1,9 +1,9 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform;
+package at.ac.tuwien.e0426099.simulator.environment.zone;
 
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingCore;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.ProcessingUnit;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.listener.ProcessingUnitListener;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingCore;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingUnit;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.listener.ProcessingUnitListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
@@ -16,6 +16,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * A zone represents a unit of execution, including a cpu, network, memory etc.
+ * Comparable to a single VM.
+ *
  * @author PatrickF
  * @since 08.12.12
  */
@@ -60,6 +63,10 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 	public synchronized String getCompleteStatus(boolean detailed) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(LogUtil.BR + LogUtil.h2("Zone: " + this));
+		for(ITask task: taskMap.values()) {
+			sb.append(task.getCompleteStatus(detailed)+LogUtil.BR);
+		}
+
 		sb.append(processingUnit.getCompleteStatus(detailed));
 		return sb.toString();
 	}

@@ -1,8 +1,15 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities;
 
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * This will wrap the volatile informations from a core to a single unit, so
+ * the scheduler can examine it thread-safe.
+ *
+ * @author PatrickF
+ * @since 07.12.12
+ */
 public class ProcessingCoreInfo {
 	private UUID id;
 	private String name;

@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.test.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
 import at.ac.tuwien.e0426099.test.AZoneSimTest;
 import org.apache.log4j.LogManager;

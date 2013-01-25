@@ -1,10 +1,10 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingRequirements;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingRequirements;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.TaskWorkManager;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
@@ -44,10 +44,18 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	private TaskWorkManager taskWorkManager;
 	private Exception exception;
 	private Future futureRefForThread;
+
 	private Semaphore startStopSemaphore;
 	private Semaphore pauseSemaphore;
+	private Semaphore failSemaphore;
 	private Semaphore checkOnFinishSemaphore;
 
+	/**
+	 * @param readAbleName
+	 * @param neededForExecution memory needed for execution
+	 * @param maxComputationalUtilization whats the max value of compuationsPerMs
+	 * @param computationsNeededForFinishing how many cycles/computation need to finsih
+	 */
 	public ComputationalSubTask(String readAbleName, MemoryAmount neededForExecution, Long maxComputationalUtilization, Long computationsNeededForFinishing) {
 		id = new SubTaskId();
 		this.readAbleName = readAbleName;
@@ -58,12 +66,14 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		requirements = new ProcessingRequirements(new RawProcessingPower(maxComputationalUtilization),computationsNeededForFinishing);
 		taskWorkManager = new TaskWorkManager(requirements);
 		listeners = new ArrayList<ITaskListener>();
-		startStopSemaphore = new Semaphore(1, true);
-		pauseSemaphore = new Semaphore(1, true);
-		checkOnFinishSemaphore =new Semaphore(1,true);
 		log.refreshData();
 		log.i("Task created [Type:"+type+", MinExecTime: "+requirements.getMinimumExecutionTimeMs()+"ms, MemDemand: "+memoryDemand+"]");
 		setStatus(SubTaskStatus.NOT_STARTED);
+
+		startStopSemaphore = new Semaphore(1, true);
+		pauseSemaphore = new Semaphore(1, true);
+		checkOnFinishSemaphore =new Semaphore(1,true);
+		failSemaphore=new Semaphore(1,true);
 	}
 
 	@Override
@@ -93,6 +103,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	@Override
 	public void pause() {
+		aquireSempahore(failSemaphore,"failPause()");
 		aquireSempahore(startStopSemaphore,"pausePause()");
 		aquireSempahore(checkOnFinishSemaphore,"checkFinishPause()");
 		if(status == SubTaskStatus.RUNNING) {
@@ -104,10 +115,12 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		}
 		releaseSempahore(checkOnFinishSemaphore,"checkFinishPause()");
 		releaseSempahore(startStopSemaphore,"pausePause()");
+		releaseSempahore(failSemaphore, "failPause()");
 	}
 
 	@Override
 	public void run() {
+		aquireSempahore(failSemaphore,"failRun()");
 		aquireSempahore(pauseSemaphore,"pauseRun()");
 		aquireSempahore(checkOnFinishSemaphore,"checkFinishRun()");
         if(status == SubTaskStatus.FINISHED) {
@@ -124,17 +137,22 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
         }
 		releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
 		releaseSempahore(pauseSemaphore,"pauseRun()");
+		releaseSempahore(failSemaphore,"failRun()");
 	}
 
 	@Override
 	public void fail(Exception e) {
+		aquireSempahore(startStopSemaphore,"startStopFail()");
+		aquireSempahore(pauseSemaphore,"pauseFail()");
 		aquireSempahore(checkOnFinishSemaphore, "checkFinsihFail()");
 		log.i("Task failed. ["+e.getClass().getSimpleName()+"]");
 		setStatus(SubTaskStatus.SIMULATED_ERROR);
 		exception=e;
 		interruptExecThread();
-		aquireSempahore(startStopSemaphore, "startStopFail()");
+		aquireSempahore(failSemaphore, "failFail()");
 		releaseSempahore(checkOnFinishSemaphore, "checkFinsihFail()");
+		releaseSempahore(pauseSemaphore, "pauseFail()");
+		releaseSempahore(startStopSemaphore, "startStopFail()");
 	}
 
 	@Override
@@ -194,7 +212,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
 		log.e("Exception thrown while executing Thread",e);
-		releaseSempahore(startStopSemaphore, "startStopExecException");
+		releaseSempahore(failSemaphore, "failException");
 		callAllListenerFailed();
 	}
 
@@ -247,6 +265,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
         sb.append(LogUtil.TAB+" Status: "+status+", Needed Memory: "+memoryDemand+", ProcReqs: "+requirements+ LogUtil.BR);
         sb.append(LogUtil.TAB+LogUtil.TAB+"Summary: Net time spent: "+String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+"ms, Overall: "+String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms, Min: "+requirements.getMinimumExecutionTimeMs()+" ms"+ LogUtil.BR);
 
+
         if(detailed)
             for(int i=0; i< taskWorkManager.getProcessingSlices().size();i++) {
                 sb.append(LogUtil.TAB+LogUtil.TAB+LogUtil.TAB+" Processingslice "+(i+1)+": "+taskWorkManager.getProcessingSlices().get(i)+ LogUtil.BR);
@@ -257,6 +276,9 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
 	/* ***************************************************************************** PRIVATES */
 
+	/**
+	 * This will interrupt the running thread simulating a pause or fail
+	 */
 	private void interruptExecThread() {
 		log.v("interrupt called");
 		if(futureRefForThread != null) {

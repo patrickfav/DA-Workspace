@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.test.processor.single;
 
 import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.environment.platform.ZoneId;
+import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;
 import org.apache.log4j.LogManager;
@@ -21,7 +21,7 @@ public class ConfigAbleTest1 extends AProcessorTest{
 	@Before
 	public void setUp() {
 		super.setUp();
-		taskList = generateFixedTasks(10,8);
+		taskList = generateFixedTasks(4,4);
 	}
 
 	@Test(timeout = 180000)

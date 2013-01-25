@@ -1,6 +1,7 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities;
 
 /**
+ * Wraps the compuations needed for finish and the max utilisation
  * @author PatrickF
  * @since 07.12.12
  */

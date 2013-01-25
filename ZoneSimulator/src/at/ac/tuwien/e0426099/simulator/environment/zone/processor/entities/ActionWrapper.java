@@ -1,8 +1,10 @@
-package at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities;
+package at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities;
 
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
 /**
+ * Wraps an action and the entity to do it to
+ *
  * @author PatrickF
  * @since 23.01.13
  */

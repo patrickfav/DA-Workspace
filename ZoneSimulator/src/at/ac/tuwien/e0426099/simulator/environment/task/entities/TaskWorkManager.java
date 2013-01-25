@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.entities;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingRequirements;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingRequirements;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
 import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
 
 import java.util.ArrayList;
@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * Responsible for keeping track of the work that has been done and the time needed
+ *
  * @author PatrickF
  * @since 09.12.12
  */
@@ -24,6 +26,13 @@ public class TaskWorkManager {
 		computationsLeftToDo = processingRequirements.getComputationNeedForCompletion();
 	}
 
+	/**
+	 * Start a new intervall/sloce
+	 * @param startTime time started
+	 * @param givenProcessingPower how mach cycles per ms
+	 * @return
+	 * @throws CantStartException
+	 */
 	public synchronized long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) throws CantStartException {
 		if(processingSlices.size() > 0) {
 			if(getRecentSlice().isStillProcessing()) {
@@ -40,6 +49,10 @@ public class TaskWorkManager {
 		return slice.getEstimatedTimeInMsForFinish();
 	}
 
+	/**
+	 * Stops current interval/slice
+	 * Will throw RuntimeException if not currently running
+	 */
 	public synchronized void stopCurrentProcessing() {
 		if(processingSlices.size() < 0) {
 			throw new RuntimeException("No slice available to stop");
@@ -52,6 +65,10 @@ public class TaskWorkManager {
 		return computationsLeftToDo;
 	}
 
+	/**
+	 * The net time for computations (does not add the pauses between intervals/slices)
+	 * @return
+	 */
 	public synchronized long getNetTimeSpendOnComputation() {
 		long timeMs = 0;
 		for(ProcessingSlice s:processingSlices) {
@@ -60,6 +77,10 @@ public class TaskWorkManager {
 		return timeMs;
 	}
 
+	/**
+	 * Overall duration from slice1.start to sliceN.end
+	 * @return
+	 */
 	public synchronized long getOverallTimeSpendOnComputation() {
 		if(processingSlices.size() <= 0) {
 			return 0;

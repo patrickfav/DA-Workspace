@@ -1,8 +1,8 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.interfaces;
 
-import at.ac.tuwien.e0426099.simulator.environment.platform.memory.entities.MemoryAmount;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.ProcessingRequirements;
-import at.ac.tuwien.e0426099.simulator.environment.platform.processor.entities.RawProcessingPower;
+import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingRequirements;
+import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.RawProcessingPower;
 
 /**
  * @author PatrickF
