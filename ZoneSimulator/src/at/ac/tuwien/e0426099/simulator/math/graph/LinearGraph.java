@@ -1,12 +1,9 @@
 package at.ac.tuwien.e0426099.simulator.math.graph;
 
+import at.ac.tuwien.e0426099.simulator.helper.comparators.PointXComparatorAsc;
 import at.ac.tuwien.e0426099.simulator.math.Point;
-import at.ac.tuwien.e0426099.simulator.math.PointXComparator;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This is a linear graph represented by the added points.
@@ -33,17 +30,28 @@ public class LinearGraph {
 	 * @param mean is the first starting point added at x = 0
 	 */
 	public LinearGraph(double mean) {
-		points.add(new Point(0,mean));
-		cache=new HashMap<Double, Double>();
+		points = new ArrayList<Point>();
+        addPoint(new Point(0,mean));
 	}
 
 	/**
-	 * Adds a new point to the graph changing its behaviour
-	 * @param p
+	 * Adds a new point to the graph changing its behaviour.
+     * If you add a point with a x value thats already i the graph,
+     * the point will be overwritten with the new y value.
+	 * @param point
 	 */
-	public void addPoint(Point p) {
-		points.add(p);
-		Collections.sort(points,new PointXComparator());
+	public void addPoint(Point point) {
+        //check if there is already a point with this x value and remove it
+        Iterator<Point> iterator = points.iterator();
+        while (iterator.hasNext()) {
+            Point element = iterator.next();
+            if (element.getX() == point.getX()) {
+                iterator.remove();
+            }
+        }
+
+		points.add(point);
+		Collections.sort(points, new PointXComparatorAsc());
 		cache=new HashMap<Double, Double>(); //clear cache after adding new node
 	}
 
@@ -56,8 +64,8 @@ public class LinearGraph {
 		if(!points.isEmpty()) {
 			if(x <= points.get(0).getX()) { //if there is no point beyond smallest, return min
 				return points.get(0).getY();
-			} else if(x >= points.get(points.size()).getX()) { //if there is no point beyond smallest, return max
-				return  points.get(points.size()).getY();
+			} else if(x >= points.get(points.size()-1).getX()) { //if there is no point beyond smallest, return max
+				return  points.get(points.size()-1).getY();
 			} else if(cache.containsKey(x)) {
 				return cache.get(x); //return answer from cache
 			} else {
@@ -81,7 +89,9 @@ public class LinearGraph {
 	 * @return
 	 */
 	private double getY(Point p1, Point p2, double x) {
-		return cache.put(x,p1.getY()+((p2.getY()-p1.getY()) /(p2.getX()-p1.getX())) * (x - p1.getX()));
+        double y = p1.getY()+((p2.getY()-p1.getY()) /(p2.getX()-p1.getX())) * (x - p1.getX());
+		cache.put(x,y);
+        return y;
 	}
 
 }

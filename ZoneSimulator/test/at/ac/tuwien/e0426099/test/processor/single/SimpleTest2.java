@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.test.processor.single;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.Task;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
@@ -17,7 +17,7 @@ public class SimpleTest2 extends AProcessorTest{
 
 	@Test(timeout = 60000)
 	public void testSubTaskStartShouldFinish() {
-		ZoneId id = G.get().addZone("local", defaultDualCoreUnit);
+		ZoneId id = Env.get().addZone("local", defaultDualCoreUnit);
 
 		ITask task1 = new Task("No1");
 
@@ -34,9 +34,9 @@ public class SimpleTest2 extends AProcessorTest{
 		task2.addSubTask(subTask9);
 		task2.addSubTask(subTask10);
 
-		G.get().getZone(id).addTask(task1);
-		G.get().getZone(id).addTask(task2);
+		Env.get().getZone(id).addTask(task1);
+		Env.get().getZone(id).addTask(task2);
 
-		assertTrue(G.get().waitForFinish());
+		assertTrue(Env.get().waitForFinish());
 	}
 }

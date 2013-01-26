@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
@@ -62,6 +62,6 @@ public class TaskInMemory {
 	 * @return [0.0,1.0]
 	 */
 	public double getRatioNotAssigned() {
-		return (double) amountNotAssignable.getAmountInKiloByte() / (double) G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
+		return (double) amountNotAssignable.getAmountInKiloByte() / (double) Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte();
 	}
 }

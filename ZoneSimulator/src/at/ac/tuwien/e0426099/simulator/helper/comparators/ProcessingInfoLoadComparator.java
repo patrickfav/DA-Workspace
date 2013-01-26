@@ -1,4 +1,4 @@
-package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
+package at.ac.tuwien.e0426099.simulator.helper.comparators;
 
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingCoreInfo;
 

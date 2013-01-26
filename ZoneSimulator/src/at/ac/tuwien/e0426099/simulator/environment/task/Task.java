@@ -1,12 +1,12 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.TaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
-import at.ac.tuwien.e0426099.simulator.util.Log;
-import at.ac.tuwien.e0426099.simulator.util.LogUtil;
+import at.ac.tuwien.e0426099.simulator.helper.Log;
+import at.ac.tuwien.e0426099.simulator.helper.util.LogUtil;
 
 import java.util.*;
 
@@ -15,7 +15,7 @@ import java.util.*;
  * @since 13.12.12
  */
 public class Task implements ITask{
-	private Log log = new Log(this,G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_TASK);
+	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_TASK);
 
 	private UUID id;
 	private ZoneId zoneId;
@@ -41,7 +41,7 @@ public class Task implements ITask{
 
 	public void addSubTask(ISubTask subTask) {
 		subTask.setParentId(id);
-		subTasks.put(subTask.getSubTaskId().getSubTaskId(),subTask);
+		subTasks.put(subTask.getSubTaskId().getSubTaskId(), subTask);
 		subTaskOrder.add(subTask.getSubTaskId().getSubTaskId());
 	}
 
@@ -124,7 +124,7 @@ public class Task implements ITask{
 		sb.append(LogUtil.emptyListText(subTaskOrder," - no tasks -"));
 		if(detailed) {
 			for(UUID id:subTaskOrder) {
-				sb.append(G.get().getZone(zoneId).getSubTaskForProcessor(subTasks.get(id).getSubTaskId()).getCompleteStatus(detailed)+LogUtil.BR);
+				sb.append(Env.get().getZone(zoneId).getSubTaskForProcessor(subTasks.get(id).getSubTaskId()).getCompleteStatus(detailed)+LogUtil.BR);
 			}
 		}
 		return sb.toString();

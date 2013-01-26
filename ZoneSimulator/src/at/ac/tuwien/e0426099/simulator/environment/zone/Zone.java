@@ -8,7 +8,7 @@ import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.IComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
-import at.ac.tuwien.e0426099.simulator.util.LogUtil;
+import at.ac.tuwien.e0426099.simulator.helper.util.LogUtil;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;

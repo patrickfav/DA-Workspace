@@ -27,6 +27,6 @@ public class UniformDistribution extends ADistribution {
 
 	@Override
 	public Double getNext() {
-		return min + (getRandom().nextDouble() * ((max - min) + 1));
+        return min + (max - min) * getRandom().nextDouble();
 	}
 }

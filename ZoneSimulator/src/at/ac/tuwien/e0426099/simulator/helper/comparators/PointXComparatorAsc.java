@@ -1,4 +1,6 @@
-package at.ac.tuwien.e0426099.simulator.math;
+package at.ac.tuwien.e0426099.simulator.helper.comparators;
+
+import at.ac.tuwien.e0426099.simulator.math.Point;
 
 import java.util.Comparator;
 
@@ -7,7 +9,7 @@ import java.util.Comparator;
  * @author PatrickF
  * @since 25.01.13
  */
-public class PointXComparator implements Comparator<Point> {
+public class PointXComparatorAsc implements Comparator<Point> {
 
 	@Override
 	public int compare(Point o1, Point o2) {

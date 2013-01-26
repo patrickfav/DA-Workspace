@@ -1,7 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.abstracts;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
-import at.ac.tuwien.e0426099.simulator.util.Log;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
+import at.ac.tuwien.e0426099.simulator.helper.Log;
 
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class APauseAbleThread<T> extends Thread {
-	private Log log = new Log(this, G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_SYNCTHREAD);
+	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_SYNCTHREAD);
     private BlockingDeque<T> workerQueue;
     private Semaphore pauseSemaphore;
     private volatile boolean isOnPause;
@@ -42,7 +42,7 @@ public abstract class APauseAbleThread<T> extends Thread {
             }
             log.d("[Sync] Waiting for dispatching next task");
 			try {
-				T obj = workerQueue.poll(G.THREAD_BLOCKING_TIMEOUT_SEC, TimeUnit.SECONDS);
+				T obj = workerQueue.poll(Env.THREAD_BLOCKING_TIMEOUT_SEC, TimeUnit.SECONDS);
 				if(obj != null) {
 					doTheWork(obj);
 				} else {

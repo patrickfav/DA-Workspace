@@ -10,9 +10,10 @@ import java.util.Random;
  * @since 23.01.13
  */
 public abstract class AZoneSimTest {
-	protected Logger log = LogManager.getLogger(this.getClass().getName());
+    public final static long SEED = 794380265;
+    protected Logger log = LogManager.getLogger(this.getClass().getName());
 
-	private Random fixedRandom = new Random(794380265);
+	private Random fixedRandom = new Random(SEED);
 	private Random realPseudoRandom = new Random();
 
 

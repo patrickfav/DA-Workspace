@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.ComputationalSubTaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
@@ -14,8 +14,8 @@ import at.ac.tuwien.e0426099.simulator.environment.task.listener.ITaskListener;
 import at.ac.tuwien.e0426099.simulator.environment.task.thread.ExecutionRunnable;
 import at.ac.tuwien.e0426099.simulator.exceptions.CantStartException;
 import at.ac.tuwien.e0426099.simulator.exceptions.RunOnIllegalStateException;
-import at.ac.tuwien.e0426099.simulator.util.Log;
-import at.ac.tuwien.e0426099.simulator.util.LogUtil;
+import at.ac.tuwien.e0426099.simulator.helper.Log;
+import at.ac.tuwien.e0426099.simulator.helper.util.LogUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * @since 08.12.12
  */
 public class ComputationalSubTask implements IComputationalSubTask,ExecutionCallback {
-	private Log log = new Log(this,G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_SUBTASK);
+	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_SUBTASK);
 
 	private SubTaskId id;
 	private ZoneId zoneId;
@@ -83,9 +83,9 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	 */
 	public ComputationalSubTask(ComputationalSubTaskTemplate template) {
 		this(template.getReadAbleName(),
-				new MemoryAmount(template.getNeededMemoryInKiB().getNext().longValue()),
-				template.getMaxComputationalUtilization().getNext().longValue(),
-				template.getComputationsNeededForFinishing().getNext().longValue());
+                new MemoryAmount(template.getNeededMemoryInKiB().getNext().longValue()),
+                template.getMaxComputationalUtilization().getNext().longValue(),
+                template.getComputationsNeededForFinishing().getNext().longValue());
 	}
 
 	@Override
@@ -141,23 +141,23 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 
             if(status == SubTaskStatus.NOT_STARTED || status == SubTaskStatus.PAUSED) {
                 setStatus(SubTaskStatus.RUNNING);
-                futureRefForThread = G.get().getZone(zoneId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
+                futureRefForThread = Env.get().getZone(zoneId).getThreadPool().submit(new ExecutionRunnable(availableProcPower.getEstimatedTimeInMsToFinish(taskWorkManager.getComputationsLeftToDo()),this));
             } else {
                 throw new RunOnIllegalStateException("Can only start running when in pause or not started, but was in state "+status+" in "+ toString());
             }
 			aquireSempahore(startStopSemaphore,"startStopRun()");
         }
 		releaseSempahore(checkOnFinishSemaphore,"checkFinishRun()");
-		releaseSempahore(pauseSemaphore,"pauseRun()");
+		releaseSempahore(pauseSemaphore, "pauseRun()");
 		releaseSempahore(failSemaphore,"failRun()");
 	}
 
 	@Override
 	public void fail(Exception e) {
 		aquireSempahore(startStopSemaphore,"startStopFail()");
-		aquireSempahore(pauseSemaphore,"pauseFail()");
+		aquireSempahore(pauseSemaphore, "pauseFail()");
 		aquireSempahore(checkOnFinishSemaphore, "checkFinsihFail()");
-		log.i("Task failed. ["+e.getClass().getSimpleName()+"]");
+		log.i("Task failed. [" + e.getClass().getSimpleName() + "]");
 		setStatus(SubTaskStatus.SIMULATED_ERROR);
 		exception=e;
 		interruptExecThread();
@@ -302,7 +302,7 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	private void setStatus(SubTaskStatus t) {
-		log.d("Status change from "+status+" to " + t);
+		log.d("Status change from " + status + " to " + t);
 		status = t;
 	}
 
@@ -318,9 +318,9 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 	}
 
 	private void aquireSempahore(Semaphore s, String msg) {
-        log.v("Start acquiring semaphore: "+msg);
+        log.v("Start acquiring semaphore: " + msg);
 		try {
-			s.tryAcquire(G.SUBTASK_WAIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+			s.tryAcquire(Env.SUBTASK_WAIT_TIMEOUT_SEC, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			log.v("Interrupt while waiting for semaphore "+msg);
 		}

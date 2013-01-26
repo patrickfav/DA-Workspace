@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.test.processor;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.memory.WorkingMemory;
 import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingCore;
@@ -56,7 +56,7 @@ public abstract class AProcessorTest extends AZoneSimTest {
 
 	@After
 	public void tearDown() {
-		G.recycle();
+		Env.recycle();
 	}
 
 

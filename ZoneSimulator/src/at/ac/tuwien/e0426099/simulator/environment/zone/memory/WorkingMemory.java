@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.zone.memory;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.MemoryAmount;
 import at.ac.tuwien.e0426099.simulator.environment.zone.memory.entities.TaskInMemory;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
@@ -68,18 +68,18 @@ public class WorkingMemory implements TaskManagementMemoryListener {
 	private void addSubTask(SubTaskId subTaskId) {
 		TaskInMemory tim;
 		if(getFreeMemory().getAmountInKiloByte() > 0) { //has some free mem to give
-			if(getFreeMemory().getAmountInKiloByte() >= G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
-				tim = new TaskInMemory(zoneId,subTaskId, G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
+			if(getFreeMemory().getAmountInKiloByte() >= Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()) { //more memory than needed
+				tim = new TaskInMemory(zoneId,subTaskId, Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand(),new MemoryAmount(0));
 			} else { //can only assign the rest of free mem
 				tim = new TaskInMemory(zoneId,subTaskId,getFreeMemory(),
-						new MemoryAmount(G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
+						new MemoryAmount(Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand().getAmountInKiloByte()-getFreeMemory().getAmountInKiloByte()));
 			}
 		} else { //no memory to give
-			tim = new TaskInMemory(zoneId,subTaskId,new MemoryAmount(0), G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand());
+			tim = new TaskInMemory(zoneId,subTaskId,new MemoryAmount(0), Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getMemoryDemand());
 		}
 		tim.markChanged();
 		taskInMemoryList.add(tim);
-		G.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
+		Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).setProcessingHandicap(tim.getRatioNotAssigned()*memoryNotAssignedPenalityMultiplicator);
 	}
 
 	private synchronized MemoryAmount getUsedMemory() {

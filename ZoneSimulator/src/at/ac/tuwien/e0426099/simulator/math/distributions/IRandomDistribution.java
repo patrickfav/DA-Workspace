@@ -14,4 +14,10 @@ public interface IRandomDistribution {
 	 * @return
 	 */
 	public Double getNext();
+
+    /**
+     * Gets a pseudo random long for this model distribution
+     * @return
+     */
+    public Long getNextLong();
 }

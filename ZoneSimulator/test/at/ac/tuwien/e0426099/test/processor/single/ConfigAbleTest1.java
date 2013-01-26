@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.test.processor.single;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;
@@ -26,14 +26,14 @@ public class ConfigAbleTest1 extends AProcessorTest{
 
 	@Test(timeout = 180000)
 	public void testSubTaskStartShouldFinish() {
-		ZoneId id = G.get().addZone("local", defaultDualCoreUnit);
+		ZoneId id = Env.get().addZone("local", defaultDualCoreUnit);
 
 		for(ITask t:taskList) {
-			G.get().getZone(id).addTask(t);
+			Env.get().getZone(id).addTask(t);
 		}
 
-		G.get().start();
+		Env.get().start();
 		
-		assertTrue(G.get().waitForFinish());
+		assertTrue(Env.get().waitForFinish());
 	}
 }

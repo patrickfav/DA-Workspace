@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.test.processor.batch;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.test.processor.AProcessorTest;
@@ -60,13 +60,13 @@ public class IntensivatingTests extends AProcessorTest{
 
 
 	private void testSubTaskStartShouldFinish(int tasks, int subtasksPerTask) {
-		ZoneId id = G.get().addZone("local", defaultDualCoreUnit);
+		ZoneId id = Env.get().addZone("local", defaultDualCoreUnit);
 
 		for(ITask t:generateFixedTasks(tasks,subtasksPerTask)) {
-			G.get().getZone(id).addTask(t);
+			Env.get().getZone(id).addTask(t);
 		}
 
-		G.get().start();
-		assertTrue(G.get().waitForFinish());
+		Env.get().start();
+		assertTrue(Env.get().waitForFinish());
 	}
 }

@@ -3,7 +3,7 @@ package at.ac.tuwien.e0426099.simulator.environment;
 import at.ac.tuwien.e0426099.simulator.environment.zone.Zone;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingUnit;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
-import at.ac.tuwien.e0426099.simulator.util.LogUtil;
+import at.ac.tuwien.e0426099.simulator.helper.util.LogUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author PatrickF
  * @since 18.01.13
  */
-public class G {
+public class Env {
 	public static final boolean VERBOSE_LOG_MODE_GENERAL = true;
 	public static final boolean VERBOSE_LOG_MODE_SUBTASK = true;
 	public static final boolean VERBOSE_LOG_MODE_TASK = true;
@@ -27,19 +27,19 @@ public class G {
 	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 200;
 	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 100;
 
-    private Logger log = LogManager.getLogger(G.class.getName());
+    private Logger log = LogManager.getLogger(Env.class.getName());
 
 	private ConcurrentHashMap<UUID,Zone> zones;
 
-	private static G instance;
+	private static Env instance;
 
-	private G() {
+	private Env() {
 		zones = new ConcurrentHashMap<UUID, Zone>();
 	}
 
-	public static G get() {
+	public static Env get() {
 		if(instance == null) {
-			instance = new G();
+			instance = new Env();
 		}
 		return instance;
 	}

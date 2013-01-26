@@ -1,6 +1,6 @@
-package at.ac.tuwien.e0426099.simulator.environment.task.comparator;
+package at.ac.tuwien.e0426099.simulator.helper.comparators;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 
@@ -19,7 +19,7 @@ public class ProcPwrReqIdComparator implements Comparator<SubTaskId> {
 
 	@Override
 	public int compare(SubTaskId o1, SubTaskId o2) {
-		return new Long(G.get().getZone(zoneId).getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs())
-				.compareTo(G.get().getZone(zoneId).getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
+		return new Long(Env.get().getZone(zoneId).getSubTaskForProcessor(o1).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs())
+				.compareTo(Env.get().getZone(zoneId).getSubTaskForProcessor(o2).getProcessingRequirements().getMaxComputationalUtilization().getComputationsPerMs());
 	}
 }

@@ -27,6 +27,11 @@ public abstract class ADistribution implements IRandomDistribution{
 	@Override
 	public abstract Double getNext();
 
+    @Override
+    public Long getNextLong() {
+        return (long) Math.ceil(getNext());
+    }
+
 	public Random getRandom() {
 		return random;
 	}

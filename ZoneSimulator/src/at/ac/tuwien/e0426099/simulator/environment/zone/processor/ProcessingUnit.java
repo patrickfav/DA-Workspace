@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.zone.processor;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.abstracts.APauseAbleThread;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ActionWrapper;
@@ -11,7 +11,7 @@ import at.ac.tuwien.e0426099.simulator.environment.zone.processor.listener.TaskM
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.scheduler.IScheduler;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
 import at.ac.tuwien.e0426099.simulator.exceptions.TooMuchConcurrentTasksException;
-import at.ac.tuwien.e0426099.simulator.util.LogUtil;
+import at.ac.tuwien.e0426099.simulator.helper.util.LogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,13 +77,13 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
         sb.append(LogUtil.BR +LogUtil.h3("Finished Subtasks"));
         sb.append(LogUtil.emptyListText(finnishedSubTasks," - no tasks -"));
         for(SubTaskId id:finnishedSubTasks) {
-            sb.append(G.get().getZone(zoneId).getSubTaskForProcessor(id).getCompleteStatus(false)+LogUtil.BR);
+            sb.append(Env.get().getZone(zoneId).getSubTaskForProcessor(id).getCompleteStatus(false)+LogUtil.BR);
         }
 
         sb.append(LogUtil.BR +LogUtil.h3("Failed Subtasks"));
         sb.append(LogUtil.emptyListText(failedSubTasks, " - no tasks -"));
         for(SubTaskId id:failedSubTasks) {
-            sb.append(G.get().getZone(zoneId).getSubTaskForProcessor(id).getCompleteStatus(false)+LogUtil.BR);
+            sb.append(Env.get().getZone(zoneId).getSubTaskForProcessor(id).getCompleteStatus(false)+LogUtil.BR);
         }
         return sb.toString();
     }
@@ -157,11 +157,11 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 
 		while((dest=scheduler.getNext(getAllInfos())) != null) {
 			try {
-				getLog().d("next task to schedule: "+ G.get().getZone(zoneId).getSubTaskForProcessor(dest.getSubTaskId()));
+				getLog().d("next task to schedule: "+ Env.get().getZone(zoneId).getSubTaskForProcessor(dest.getSubTaskId()));
 				addTaskToDestination(dest);
 			} catch (TooMuchConcurrentTasksException e) {
 				getLog().w("too many concurrent tasks! failing task.",e);
-				G.get().getZone(zoneId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
+				Env.get().getZone(zoneId).getSubTaskForProcessor(dest.getSubTaskId()).fail(e);
 				failedSubTasks.add(dest.getSubTaskId());
 			}
 		}

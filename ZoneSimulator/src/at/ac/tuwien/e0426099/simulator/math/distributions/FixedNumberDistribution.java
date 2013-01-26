@@ -14,11 +14,6 @@ public class FixedNumberDistribution extends ADistribution {
 		this.number = number;
 	}
 
-	public FixedNumberDistribution(Double number, long randomSeed) {
-		super(randomSeed);
-		this.number = number;
-	}
-
 	@Override
 	public Double getNext() {
 		return number;

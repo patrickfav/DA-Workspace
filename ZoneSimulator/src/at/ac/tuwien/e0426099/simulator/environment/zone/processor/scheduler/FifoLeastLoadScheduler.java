@@ -1,11 +1,11 @@
 package at.ac.tuwien.e0426099.simulator.environment.zone.processor.scheduler;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.CoreDestination;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.entities.ProcessingCoreInfo;
-import at.ac.tuwien.e0426099.simulator.environment.task.comparator.ProcessingInfoLoadComparator;
+import at.ac.tuwien.e0426099.simulator.helper.comparators.ProcessingInfoLoadComparator;
 import at.ac.tuwien.e0426099.simulator.environment.task.entities.SubTaskId;
-import at.ac.tuwien.e0426099.simulator.util.Log;
+import at.ac.tuwien.e0426099.simulator.helper.Log;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @since 07.12.12
  */
 public class FifoLeastLoadScheduler implements IScheduler{
-	private Log log = new Log(this, G.VERBOSE_LOG_MODE_GENERAL && G.VERBOSE_LOG_MODE_SCHEDULER);
+	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_SCHEDULER);
 	private ConcurrentLinkedQueue<SubTaskId> taskQueue;
 
 	public FifoLeastLoadScheduler() {

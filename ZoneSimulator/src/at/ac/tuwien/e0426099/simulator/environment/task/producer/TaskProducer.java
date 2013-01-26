@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.producer;
 
-import at.ac.tuwien.e0426099.simulator.environment.G;
+import at.ac.tuwien.e0426099.simulator.environment.Env;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.Task;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
@@ -11,11 +11,10 @@ import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.TaskT
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.math.Point;
 import at.ac.tuwien.e0426099.simulator.math.graph.LinearGraph;
-import at.ac.tuwien.e0426099.simulator.util.Log;
+import at.ac.tuwien.e0426099.simulator.helper.util.DateUtil;
+import at.ac.tuwien.e0426099.simulator.helper.Log;
 
-import java.util.Calendar;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -23,7 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @since 25.01.13
  */
 public class TaskProducer extends Thread{
-	private Log log = new Log(this, G.VERBOSE_LOG_MODE_GENERAL);
+	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL);
 	private static final int FREQUENCY_MS = 150; //how long a cycle is
 
 	private Random random;
@@ -31,6 +30,7 @@ public class TaskProducer extends Thread{
 	private TaskTemplate template;
 	private Queue<ZoneId> zoneIds;
 	private boolean running;
+    private Date startTime;
 
 	public TaskProducer(TaskTemplate template, double avgCallsPerSec) {
 		this.template = template;
@@ -38,6 +38,7 @@ public class TaskProducer extends Thread{
 		running=true;
 		zoneIds=new ConcurrentLinkedQueue<ZoneId>();
 		random = new Random();
+        startTime=new Date();
 		log.refreshData();
 	}
 
@@ -83,6 +84,8 @@ public class TaskProducer extends Thread{
 	 * Gets the current usage and coverts it to frequency and adds task accordingly
 	 */
 	private void computeCountAndRunTaskForThisCycle() {
+        Calendar c= new GregorianCalendar();
+        c.setTimeInMillis(DateUtil.elapsedTime(startTime,new Date())); //starting time as a period from startup of this producer (e.g always start at time 0, not an arbitrary time)
 		double currentUsage = timeUsageGarph.getY(Calendar.getInstance().get(Calendar.MINUTE)+(Calendar.getInstance().get(Calendar.SECOND)/60));
 		log.v("Current usage per sec "+currentUsage+".");
 
@@ -124,7 +127,7 @@ public class TaskProducer extends Thread{
 			task.addSubTask(subTask);
 		}
 
-		G.get().getZone(zoneIds.peek()).addTask(task);
+		Env.get().getZone(zoneIds.peek()).addTask(task);
 	}
 
 	@Override
