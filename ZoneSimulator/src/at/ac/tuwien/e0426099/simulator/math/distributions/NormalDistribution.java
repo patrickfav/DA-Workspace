@@ -1,5 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.math.distributions;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Normal Distribution
  * http://en.wikipedia.org/wiki/Normal_distribution
@@ -26,13 +28,13 @@ public class NormalDistribution extends ADistribution {
 	 * @param randomSeed the fixed seed for the random genrator
 	 */
 	public NormalDistribution(Double mean, Double standardDeviation, long randomSeed) {
-		super(randomSeed);
+        //ThreadLocalRandom.current().setSeed(randomSeed);
 		this.mean = mean;
 		this.standardDeviation = standardDeviation;
 	}
 
 	@Override
 	public Double getNext() {
-		return getRandom().nextGaussian() * standardDeviation + mean;
+		return ThreadLocalRandom.current().nextGaussian() * standardDeviation + mean;
 	}
 }

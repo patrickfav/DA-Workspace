@@ -1,5 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.math.distributions;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * This is a uniform distribution, where every value has the same portability of occurrence,
  * just like the normal Random.nextDouble(); is uniformly distributed between 0.0 - 1.0
@@ -20,13 +22,13 @@ public class UniformDistribution extends ADistribution {
 	}
 
 	public UniformDistribution(Double min, Double max, long randomSeed) {
-		super(randomSeed);
+        //ThreadLocalRandom.current().setSeed(randomSeed);
 		this.min = min;
 		this.max = max;
 	}
 
 	@Override
 	public Double getNext() {
-        return min + (max - min) * getRandom().nextDouble();
+        return min + (max - min) * ThreadLocalRandom.current().nextDouble();
 	}
 }

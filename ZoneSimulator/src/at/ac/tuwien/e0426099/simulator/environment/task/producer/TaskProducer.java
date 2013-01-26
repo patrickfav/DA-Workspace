@@ -16,6 +16,7 @@ import at.ac.tuwien.e0426099.simulator.helper.Log;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author PatrickF
@@ -25,7 +26,6 @@ public class TaskProducer extends Thread{
 	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL);
 	private static final int FREQUENCY_MS = 150; //how long a cycle is
 
-	private Random random;
 	private LinearGraph timeUsageGarph;
 	private TaskTemplate template;
 	private Queue<ZoneId> zoneIds;
@@ -37,7 +37,6 @@ public class TaskProducer extends Thread{
 		timeUsageGarph = new LinearGraph(avgCallsPerSec);
 		running=true;
 		zoneIds=new ConcurrentLinkedQueue<ZoneId>();
-		random = new Random();
         startTime=new Date();
 		log.refreshData();
 	}
@@ -95,7 +94,7 @@ public class TaskProducer extends Thread{
 		double fPart = currentUsage - iPart; //get fractional part
 		log.v("Current usage for frequency "+FREQUENCY_MS+"ms/cycle is "+currentUsage+".");
 
-		if(random.nextDouble() > fPart) { //make fractional part to int by rounding by chance
+		if(ThreadLocalRandom.current().nextDouble() > fPart) { //make fractional part to int by rounding by chance
 			iPart++;
 		}
 
