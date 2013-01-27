@@ -28,4 +28,16 @@ public class NumberUtil {
 	public static double getPrecentageDifference(double actual, double base) {
 		return ((actual/base) -1) *100;
 	}
+
+	/**
+	 * Returns the input unless its smaller or bigger than min/max respectivly.
+	 * In that case it will return min/max
+	 * @param input
+	 * @param min
+	 * @param max
+	 * @return
+	 */
+	public static double inRange(double input, double min, double max) {
+		return Math.min(max,Math.max(min,input));
+	}
 }

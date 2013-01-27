@@ -135,10 +135,8 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 
 	@Override
 	public void pause() {
-
 		for(ProcessingCore c : cores) {
 			c.pause();
-			c.interrupt();
 		}
 
 		super.pause();

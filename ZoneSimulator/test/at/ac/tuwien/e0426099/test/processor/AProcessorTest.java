@@ -44,8 +44,8 @@ public abstract class AProcessorTest extends AZoneSimTest {
 
 
 		WorkingMemory memory = new WorkingMemory(new MemoryAmount(4 * 100 * 1000),0.5);
-		ProcessingCore core1 = new ProcessingCore(new RawProcessingPower(1000),10,0.03);
-		ProcessingCore core2 = new ProcessingCore(new RawProcessingPower(1500),10,0.05);
+		ProcessingCore core1 = new ProcessingCore(new RawProcessingPower(1500),10,0.03);
+		ProcessingCore core2 = new ProcessingCore(new RawProcessingPower(2000),10,0.02);
 
 		List<ProcessingCore> cores = new ArrayList<ProcessingCore>();
 		cores.add(core1);

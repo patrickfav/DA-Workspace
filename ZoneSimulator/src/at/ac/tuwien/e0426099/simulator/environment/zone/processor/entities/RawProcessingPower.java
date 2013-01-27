@@ -31,7 +31,7 @@ public class RawProcessingPower {
 		} else if(penalty <= 0) {
 			return getComputationsPerMs();
 		} else {
-			return Math.floor(((double) computationsPerMs)*penalty);
+			return computationsPerMs - Math.max(0,Math.round(((double) computationsPerMs)*penalty));
 		}
 	}
 

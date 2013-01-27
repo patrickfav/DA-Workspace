@@ -230,7 +230,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		double currentProcPwrP = rawProcessingPower.getComputationsPerMsForPenalty(concurrentTaskPenaltyPercentage * (Math.max(0,currentRunningTasks.size() - 1))); //pwr - penality for concurrent processing
 		double maxProcPwrPerTask =  currentProcPwrP/Math.max(1, currentRunningTasks.size()); //fairly shared resources
 
-		getLog().d("Rebalance tasks. CurrentPower "+currentProcPwrP+" will be divided upon "+currentRunningTasks.size()+" running tasks, so maxPowerIs "+maxProcPwrPerTask);
+		getLog().d("Rebalance tasks. CurrentPower with penality "+concurrentTaskPenaltyPercentage+" is "+currentProcPwrP+" and will be divided upon "+currentRunningTasks.size()+" running tasks, so maxPowerIs "+maxProcPwrPerTask+" per task");
 
 		Collections.sort(currentRunningTasks, new ProcPwrReqIdComparator(zoneId)); //sort lower demanding task first
 

@@ -49,7 +49,8 @@ public abstract class APauseAbleThread<T> extends Thread {
 					log.d("[Sync] Timeout");
 				}
 			} catch (InterruptedException e) {
-				doTheWork(null);
+				if(!isOnPause)
+					doTheWork(null);
 				log.w("[Sync] interrupt called while waiting: "+e);
 			}
         }
@@ -60,6 +61,7 @@ public abstract class APauseAbleThread<T> extends Thread {
     public synchronized void pause() {
 		log.d("[Sync] pause called");
         isOnPause = true;
+		interrupt();
     }
 
     public synchronized void resumeExec() {

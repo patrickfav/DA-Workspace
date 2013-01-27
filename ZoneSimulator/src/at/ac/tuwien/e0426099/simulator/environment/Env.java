@@ -4,6 +4,7 @@ import at.ac.tuwien.e0426099.simulator.environment.zone.Zone;
 import at.ac.tuwien.e0426099.simulator.environment.zone.processor.ProcessingUnit;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.helper.util.LogUtil;
+import at.ac.tuwien.e0426099.simulator.helper.util.NumberUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -99,7 +100,7 @@ public class Env {
 	}
 
     public void resume(double executionFactor) {
-		this.executionFactor = Math.min(EnvConst.MAX_EXEC_FACTOR,Math.max(EnvConst.MIN_EXEC_FACTOR,executionFactor));
+		this.executionFactor = NumberUtil.inRange(executionFactor,EnvConst.MIN_EXEC_FACTOR,EnvConst.MAX_EXEC_FACTOR);
 
 		log.info(LogUtil.BR+"RESUME x"+executionFactor+LogUtil.BR+LogUtil.HR2);
 

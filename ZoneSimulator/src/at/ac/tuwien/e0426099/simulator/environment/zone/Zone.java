@@ -111,7 +111,6 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 	@Override
 	public synchronized void pause() {
 		processingUnit.pause();
-		processingUnit.interrupt();
 		super.pause();
 	}
 
