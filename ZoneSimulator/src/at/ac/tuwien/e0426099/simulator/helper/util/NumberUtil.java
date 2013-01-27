@@ -17,4 +17,15 @@ public class NumberUtil {
 	public static double round(double number, int precision) {
 		return Math.round(number * Math.pow(10.0,(double) precision)) /  Math.pow(10.0,(double) precision);
 	}
+
+	/**
+	 * Returns the difference of actual to base in percentage.
+	 * E.g. base is 90 and actual is 120 this will return +33,333(%)
+	 * @param actual
+	 * @param base
+	 * @return
+	 */
+	public static double getPrecentageDifference(double actual, double base) {
+		return ((actual/base) -1) *100;
+	}
 }

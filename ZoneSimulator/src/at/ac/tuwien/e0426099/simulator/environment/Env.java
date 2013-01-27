@@ -89,6 +89,7 @@ public class Env {
 
         for(Zone p: zones.values()) {
             p.pause();
+			p.interrupt();
         }
 
     }

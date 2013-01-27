@@ -276,8 +276,9 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
         sb.append(LogUtil.TAB+" Status: "+status+", Needed Memory: "+memoryDemand+", ProcReqs: "+requirements+ LogUtil.BR);
         sb.append(LogUtil.TAB+LogUtil.TAB+"Summary: Net time spent: "+
 				String.valueOf(taskWorkManager.getNetTimeSpendOnComputation())+
-				"ms (+ "+NumberUtil.round(((((double) taskWorkManager.getNetTimeSpendOnComputation() / ((double) requirements.getMinimumExecutionTimeMs() / taskWorkManager.getWeightedExecutionFactorAvg())) -1) *100),2) +"%), Overall: "+
-				String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms, Min: "+
+				"ms (+ "+NumberUtil.round(NumberUtil.getPrecentageDifference((double) taskWorkManager.getNetTimeSpendOnComputation(),(double) requirements.getMinimumExecutionTimeMs() / taskWorkManager.getWeightedExecutionFactorAvg()),2) +"%), Overall: "+
+				String.valueOf(taskWorkManager.getOverallTimeSpendOnComputation())+"ms (+"+
+				NumberUtil.round(NumberUtil.getPrecentageDifference((double) taskWorkManager.getOverallTimeSpendOnComputation(),(double) requirements.getMinimumExecutionTimeMs() / taskWorkManager.getWeightedExecutionFactorAvg()),2)+"%), Min: "+
 				NumberUtil.round((((double) requirements.getMinimumExecutionTimeMs()) / taskWorkManager.getWeightedExecutionFactorAvg()),2)+" ms, Avg Factor: x"+
 				(Math.round(taskWorkManager.getWeightedExecutionFactorAvg()*100.0)/100.0)+
 				LogUtil.BR);

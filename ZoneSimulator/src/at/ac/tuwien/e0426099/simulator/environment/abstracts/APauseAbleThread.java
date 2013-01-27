@@ -11,11 +11,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created with IntelliJ IDEA.
- * User: PatrickF
- * Date: 21.01.13
- * Time: 22:39
- * To change this template use File | Settings | File Templates.
+ * This is a abstract for the main functions of the pause and run functionality
  */
 public abstract class APauseAbleThread<T> extends Thread {
 	private Log log = new Log(this, EnvConst.VERBOSE_LOG_MODE_GENERAL && EnvConst.VERBOSE_LOG_MODE_SYNCTHREAD);
@@ -30,7 +26,7 @@ public abstract class APauseAbleThread<T> extends Thread {
         workerQueue = new LinkedBlockingDeque<T>();
         pauseSemaphore=new Semaphore(0,false);
 		workSwitch=true;
-		workLock = new ReentrantLock();
+		workLock = new ReentrantLock(true);
 		executionFactor=1.0;
     }
 
@@ -43,14 +39,17 @@ public abstract class APauseAbleThread<T> extends Thread {
                 log.d("[Sync] resuming");
             }
             log.d("[Sync] Waiting for dispatching next task");
+
 			try {
 				T obj = workerQueue.poll(EnvConst.THREAD_BLOCKING_TIMEOUT_SEC, TimeUnit.SECONDS);
 				if(obj != null) {
 					doTheWork(obj);
 				} else {
+					doTheWork(null);
 					log.d("[Sync] Timeout");
 				}
 			} catch (InterruptedException e) {
+				doTheWork(null);
 				log.w("[Sync] interrupt called while waiting: "+e);
 			}
         }
@@ -78,14 +77,16 @@ public abstract class APauseAbleThread<T> extends Thread {
 	}
 
     protected void addToWorkerQueue(T obj) {
-        workerQueue.add(obj);
-    }
+		try {
+			workerQueue.putLast(obj);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
 	protected boolean checkIfThereWillBeAnyWork() {
 		return workSwitch;
 	}
-	protected abstract void doTheWork(T input);
-	protected abstract void onAllDone();
 
 	public void waitForFinish() {
 		log.d("[Sync] wait for task to finish");
@@ -111,4 +112,7 @@ public abstract class APauseAbleThread<T> extends Thread {
 	public void setExecutionFactor(double executionFactor) {
 		this.executionFactor =  executionFactor;
 	}
+
+	protected abstract void doTheWork(T input);
+	protected abstract void onAllDone();
 }

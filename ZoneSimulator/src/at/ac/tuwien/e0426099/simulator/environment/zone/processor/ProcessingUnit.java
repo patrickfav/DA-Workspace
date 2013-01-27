@@ -105,15 +105,17 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 	@Override
 	public void doTheWork(ActionWrapper input) {
 		getWorkLock().lock();
-		if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
-			scheduler.addToQueue(input.getSubTaskId());
-		} else if(input.getActionType().equals(ActionWrapper.ActionType.FINISH)) {
-			memoryCallBack.onSubTaskAdded(input.getSubTaskId());
-			finnishedSubTasks.add(input.getSubTaskId());
-			platformCallBack.onTaskFinished(input.getCore(),input.getSubTaskId());
-		} else if(input.getActionType().equals(ActionWrapper.ActionType.FAIL)) {
-			failedSubTasks.add(input.getSubTaskId());
-			platformCallBack.onTaskFailed(input.getCore(), input.getSubTaskId());
+		if(input != null) {
+			if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
+				scheduler.addToQueue(input.getSubTaskId());
+			} else if(input.getActionType().equals(ActionWrapper.ActionType.FINISH)) {
+				memoryCallBack.onSubTaskAdded(input.getSubTaskId());
+				finnishedSubTasks.add(input.getSubTaskId());
+				platformCallBack.onTaskFinished(input.getCore(),input.getSubTaskId());
+			} else if(input.getActionType().equals(ActionWrapper.ActionType.FAIL)) {
+				failedSubTasks.add(input.getSubTaskId());
+				platformCallBack.onTaskFailed(input.getCore(), input.getSubTaskId());
+			}
 		}
 		scheduleTasks();
 		getWorkLock().unlock();
@@ -133,10 +135,13 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 
 	@Override
 	public void pause() {
-		super.pause();
+
 		for(ProcessingCore c : cores) {
 			c.pause();
+			c.interrupt();
 		}
+
+		super.pause();
 	}
 
 	@Override
@@ -147,6 +152,7 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 			c.resumeExec();
 		}
 	}
+
 	/* ********************************************************************************** CALLBACKS */
 
 	@Override

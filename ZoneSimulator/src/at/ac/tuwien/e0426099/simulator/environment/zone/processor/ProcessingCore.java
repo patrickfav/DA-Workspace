@@ -138,18 +138,21 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		getWorkLock().lock();
 		getLog().d("start next interation (doWork)");
 		pauseAllUnfinishedTasks();
-		if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
-			getLog().d("Add " + input.getSubTaskId() + " to running tasks");
-			currentRunningTasks.add(input.getSubTaskId()); //add new task
-		} else if(input.getActionType().equals(ActionWrapper.ActionType.FINISH)) {
-			getLog().d("Remove " + input.getSubTaskId() + " from running tasks");
-			currentRunningTasks.remove(input.getSubTaskId()); //remove
-			processingUnit.onTaskFinished(this,input.getSubTaskId()); //inform processing unit
-		} else if(input.getActionType().equals(ActionWrapper.ActionType.FAIL)) {
-			getLog().d("Remove " + input.getSubTaskId() + " from running tasks");
-			currentRunningTasks.remove(input.getSubTaskId()); //remove
-			processingUnit.onTaskFailed(this,input.getSubTaskId()); //inform processing unit
+		if(input != null) {
+			if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
+				getLog().d("Add " + input.getSubTaskId() + " to running tasks");
+				currentRunningTasks.add(input.getSubTaskId()); //add new task
+			} else if(input.getActionType().equals(ActionWrapper.ActionType.FINISH)) {
+				getLog().d("Finish: Remove " + input.getSubTaskId() + " from running tasks");
+				currentRunningTasks.remove(input.getSubTaskId()); //remove
+				processingUnit.onTaskFinished(this,input.getSubTaskId()); //inform processing unit
+			} else if(input.getActionType().equals(ActionWrapper.ActionType.FAIL)) {
+				getLog().d("Fail: Remove " + input.getSubTaskId() + " from running tasks");
+				currentRunningTasks.remove(input.getSubTaskId()); //remove
+				processingUnit.onTaskFailed(this,input.getSubTaskId()); //inform processing unit
+			}
 		}
+
 		reBalanceTasks();
 		runAllTasks();
 		getWorkLock().unlock();
@@ -165,14 +168,13 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		if(!super.checkIfThereWillBeAnyWork()) {
 			return !currentRunningTasks.isEmpty();
 		}
-
 		return super.checkIfThereWillBeAnyWork();
 	}
 
 	@Override
 	public void pause() {
-		super.pause();
 		pauseAllUnfinishedTasks();
+		super.pause();
 	}
 
 	@Override

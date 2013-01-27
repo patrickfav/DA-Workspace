@@ -81,8 +81,11 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 	@Override
 	public void doTheWork(UUID input) {
 		getWorkLock().lock();
-		if (input != null && taskMap.containsKey(input))
-			dispatcher(taskMap.get(input));
+		if (input != null && taskMap.containsKey(input)) {
+			if(!dispatcher(taskMap.get(input))) {
+				processingUnit.interrupt();
+			}
+		}
 		getWorkLock().unlock();
 	}
 
@@ -107,8 +110,9 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 
 	@Override
 	public synchronized void pause() {
-		super.pause();
 		processingUnit.pause();
+		processingUnit.interrupt();
+		super.pause();
 	}
 
 	@Override

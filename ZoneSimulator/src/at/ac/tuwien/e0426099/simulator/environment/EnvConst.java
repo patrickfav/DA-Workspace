@@ -8,7 +8,7 @@ package at.ac.tuwien.e0426099.simulator.environment;
 public class EnvConst {
 
 	/* log config */
-	public static final boolean VERBOSE_LOG_MODE_GENERAL = true;
+	public static final boolean VERBOSE_LOG_MODE_GENERAL = false;
 
 	public static final boolean VERBOSE_LOG_MODE_SUBTASK = true;
 	public static final boolean VERBOSE_LOG_MODE_TASK = true;
@@ -17,8 +17,8 @@ public class EnvConst {
 	public static final boolean VERBOSE_LOG_MODE_SCHEDULER = true;
 
 	/* blocking timeout config*/
-	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 100;
-	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 100;
+	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 50;
+	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 50;
 
 	/* execution factor config */
 	public static final double MIN_EXEC_FACTOR = 0.1;
