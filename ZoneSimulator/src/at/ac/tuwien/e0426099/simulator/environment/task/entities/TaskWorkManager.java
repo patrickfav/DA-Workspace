@@ -33,7 +33,7 @@ public class TaskWorkManager {
 	 * @return
 	 * @throws CantStartException
 	 */
-	public synchronized long startProcessing(Date startTime, RawProcessingPower givenProcessingPower) throws CantStartException {
+	public synchronized long startProcessing(Date startTime, RawProcessingPower givenProcessingPower,double executionFactor) throws CantStartException {
 		if(processingSlices.size() > 0) {
 			if(getRecentSlice().isStillProcessing()) {
 				throw new CantStartException("Cannot start processing while already in processing");
@@ -43,7 +43,7 @@ public class TaskWorkManager {
 			}
 		}
 
-		ProcessingSlice slice = new ProcessingSlice(startTime,givenProcessingPower,computationsLeftToDo);
+		ProcessingSlice slice = new ProcessingSlice(startTime,givenProcessingPower,computationsLeftToDo,executionFactor);
 		processingSlices.add(slice);
 
 		return slice.getEstimatedTimeInMsForFinish();
@@ -91,6 +91,18 @@ public class TaskWorkManager {
 		}
 	}
 
+	/**
+	 * Returns the sum of done computations accoring to the slices
+	 * @return
+	 */
+	public synchronized long getOverallComputationsDone() {
+		long sum = 0;
+		for(ProcessingSlice p:processingSlices) {
+			sum += (double) p.getActualComputationsDone();
+		}
+		return sum;
+	}
+
 	public synchronized ProcessingSlice getRecentSlice() {
 		if(processingSlices.size() > 0) {
 			return processingSlices.get(processingSlices.size()-1);
@@ -103,5 +115,20 @@ public class TaskWorkManager {
         return processingSlices;
     }
 
+
+	/**
+	 * Returns the avg. execution time factor combined for all slices
+	 * Uses a weighted algorithm.
+	 *
+	 * @return
+	 */
+	public double getWeightedExecutionFactorAvg() {
+		double avg = 0;
+		for(ProcessingSlice p:processingSlices) {
+			avg += (double) p.getActualComputationsDone() * p.getExecutionFactor();
+		}
+
+		return avg / (double) getOverallComputationsDone();
+	}
     /* ***************************************************************************** PRIVATES */
 }

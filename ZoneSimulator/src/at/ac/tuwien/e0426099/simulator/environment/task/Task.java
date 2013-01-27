@@ -1,6 +1,7 @@
 package at.ac.tuwien.e0426099.simulator.environment.task;
 
 import at.ac.tuwien.e0426099.simulator.environment.Env;
+import at.ac.tuwien.e0426099.simulator.environment.EnvConst;
 import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.TaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
@@ -15,7 +16,7 @@ import java.util.*;
  * @since 13.12.12
  */
 public class Task implements ITask{
-	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_TASK);
+	private Log log = new Log(this, EnvConst.VERBOSE_LOG_MODE_GENERAL && EnvConst.VERBOSE_LOG_MODE_TASK);
 
 	private UUID id;
 	private ZoneId zoneId;

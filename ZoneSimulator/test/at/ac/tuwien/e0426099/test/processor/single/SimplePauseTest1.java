@@ -34,20 +34,11 @@ public class SimplePauseTest1 extends AProcessorTest{
 
 		Env.get().start();
 
-		try {
-			Thread.sleep(2 * 1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		sleepUninterruptly(2*1000);
 
 		Env.get().pause();
 
-
-		try {
-			Thread.sleep(20 * 1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		sleepUninterruptly(20*1000);
 
 		Env.get().resume();
 		assertTrue(Env.get().waitForFinish());

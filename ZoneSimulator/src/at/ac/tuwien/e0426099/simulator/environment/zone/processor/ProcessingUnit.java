@@ -44,7 +44,6 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 		for(int i=0;i<cores.size();i++) {
 			cores.get(i).setProcessingUnitListener(this);
 			cores.get(i).setCoreName("C" + String.valueOf(i));
-			cores.get(i).start();
 		}
 		getLog().refreshData();
 	}
@@ -112,6 +111,15 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
     }
 
  	/* ********************************************************************************** THREAD ABSTRACT IMPL*/
+	 @Override
+	 public void start() {
+		 for(int i=0;i<cores.size();i++) {
+			 cores.get(i).setExecutionFactor(getExecutionFactor());
+			 cores.get(i).start();
+		 }
+		 super.start();
+	 }
+
 	@Override
 	public void doTheWork(ActionWrapper input) {
 		getWorkLock().lock();
@@ -146,6 +154,7 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 	public void resumeExec() {
 		super.resumeExec();
 		for(ProcessingCore c : cores) {
+			c.setExecutionFactor(getExecutionFactor());
 			c.resumeExec();
 		}
 	}

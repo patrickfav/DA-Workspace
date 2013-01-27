@@ -15,17 +15,17 @@ public class ProcessingSlice {
 	private Date endTime;
 	private RawProcessingPower givenProcessingPower;
 	private long computationsNeededToDo;
+	private double executionFactor;
 
-	public ProcessingSlice(Date statTime, RawProcessingPower givenProcessingPower, long computationsNeededToDo) {
+	public ProcessingSlice(Date statTime, RawProcessingPower givenProcessingPower, long computationsNeededToDo, double executionFactor) {
 		this.startTime = statTime;
 		this.givenProcessingPower = givenProcessingPower;
 		this.computationsNeededToDo = computationsNeededToDo;
+		this.executionFactor = executionFactor;
 	}
 
-	public ProcessingSlice(RawProcessingPower givenProcessingPower, long computationsNeededToDo) {
-		this.startTime = new Date();
-		this.givenProcessingPower = givenProcessingPower;
-		this.computationsNeededToDo = computationsNeededToDo;
+	public ProcessingSlice(RawProcessingPower givenProcessingPower, long computationsNeededToDo, double executionFactor) {
+		this(new Date(),givenProcessingPower,computationsNeededToDo,executionFactor);
 	}
 
 	public long endProcessing() {
@@ -38,12 +38,12 @@ public class ProcessingSlice {
 	}
 
 	public long getEstimatedTimeInMsForFinish() {
-		return givenProcessingPower.getEstimatedTimeInMsToFinish(computationsNeededToDo);
+		return givenProcessingPower.getEstimatedTimeInMsToFinish((long) Math.ceil(((double)computationsNeededToDo) /executionFactor));
 	}
 
 	public Date getEstimatedDateForFinish() {
 		if(startTime != null)
-			return new Date(startTime.getTime()+givenProcessingPower.getEstimatedTimeInMsToFinish(computationsNeededToDo));
+			return new Date(startTime.getTime()+getEstimatedTimeInMsForFinish());
 
 		return null;
 	}
@@ -55,7 +55,7 @@ public class ProcessingSlice {
 	 */
 	public long getActualComputationsDone() {
 		if(!isStillProcessing()) {
-			return givenProcessingPower.getComputationsDone(getActualTimeSpendOnComputation());
+			return givenProcessingPower.getComputationsDone(Math.round(((double) getActualTimeSpendOnComputation())*executionFactor));
 		} else {
 			return 0;
 		}
@@ -81,12 +81,16 @@ public class ProcessingSlice {
 		return endTime;
 	}
 
-    @Override
+	public double getExecutionFactor() {
+		return executionFactor;
+	}
+
+	@Override
     public String toString() {
         if(isStillProcessing()) {
-            return "StartTime: "+startTime.getTime()+"/ProcPower:"+givenProcessingPower+"/CyclesTodo: "+computationsNeededToDo;
+            return "StartTime: "+startTime.getTime()+"/ProcPower:"+givenProcessingPower+"/CyclesTodo: "+computationsNeededToDo +"/Factor x"+executionFactor;
         } else  {
-            return "Duration: "+getActualTimeSpendOnComputation()+" ms/ProcPower: "+givenProcessingPower+"/CyclesTodo: "+computationsNeededToDo;
+            return "Duration: "+getActualTimeSpendOnComputation()+" ms/ProcPower: "+givenProcessingPower+"/CyclesTodo: "+computationsNeededToDo+"/Factor x"+executionFactor;
         }
 
     }

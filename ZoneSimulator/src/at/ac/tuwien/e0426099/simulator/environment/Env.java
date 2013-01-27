@@ -17,24 +17,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 18.01.13
  */
 public class Env {
-	public static final boolean VERBOSE_LOG_MODE_GENERAL = true;
-	public static final boolean VERBOSE_LOG_MODE_SUBTASK = true;
-	public static final boolean VERBOSE_LOG_MODE_TASK = true;
-	public static final boolean VERBOSE_LOG_MODE_SYNCTHREAD = true;
-	public static final boolean VERBOSE_LOG_MODE_SLEEPTHREAD = true;
-	public static final boolean VERBOSE_LOG_MODE_SCHEDULER = true;
 
-	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 200;
-	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 100;
-
-    private Logger log = LogManager.getLogger(Env.class.getName());
+	private Logger log = LogManager.getLogger(Env.class.getName());
 
 	private ConcurrentHashMap<UUID,Zone> zones;
+	private double executionFactor; //how fast the system runs e.g x1 is normal x2 is twice as fast
 
 	private static Env instance;
 
 	private Env() {
 		zones = new ConcurrentHashMap<UUID, Zone>();
+		executionFactor=1.0;
 	}
 
 	public static Env get() {
@@ -71,20 +64,28 @@ public class Env {
         return sb.toString();
     }
 
-    public void start() {
-    	log.info(LogUtil.HR2);
-		log.info("START");
-		log.info(LogUtil.HR2);
+	/**
+	 * Starts with execition factor (e.g. how fast the system runs, 1.0 is normal, 2.0 is twice as fast)
+	 *
+	 * @param executionFactor between MIN_EXEC_FACTOR and MAX_EXEC_FACTOR
+	 */
+	public void start(double executionFactor) {
+		this.executionFactor = Math.min(EnvConst.MAX_EXEC_FACTOR,Math.max(EnvConst.MIN_EXEC_FACTOR,executionFactor));
+
+		log.info(LogUtil.BR+LogUtil.HR2+LogUtil.BR+"START x"+executionFactor+LogUtil.BR+LogUtil.HR2);
 
 		for(Zone p: zones.values()) {
+			p.setExecutionFactor(executionFactor);
 			p.start();
 		}
+	}
+
+    public void start() {
+    	start(1.0);
     }
 
     public void pause() {
-
-		log.info(LogUtil.HR2);
-		log.info("PAUSE");
+		log.info(LogUtil.BR+LogUtil.HR2+LogUtil.BR+"PAUSE"+LogUtil.BR);
 
         for(Zone p: zones.values()) {
             p.pause();
@@ -92,11 +93,17 @@ public class Env {
 
     }
 
-    public void resume() {
-		log.info("RESUME");
-		log.info(LogUtil.HR2);
+	public void resume() {
+		resume(executionFactor);
+	}
+
+    public void resume(double executionFactor) {
+		this.executionFactor = Math.min(EnvConst.MAX_EXEC_FACTOR,Math.max(EnvConst.MIN_EXEC_FACTOR,executionFactor));
+
+		log.info(LogUtil.BR+"RESUME x"+executionFactor+LogUtil.BR+LogUtil.HR2);
 
         for(Zone p: zones.values()) {
+			p.setExecutionFactor(executionFactor);
             p.resumeExec();
         }
     }

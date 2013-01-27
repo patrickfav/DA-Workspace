@@ -36,7 +36,6 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 		processingUnit = unit;
 		processingUnit.setZoneId(zoneId);
 		processingUnit.setPlatformCallBack(this);
-		processingUnit.start();
 		getLog().refreshData();
 	}
 
@@ -72,6 +71,12 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 	}
 
     /* ********************************************************************************** THREAD ABSTRACT IMPL*/
+	@Override
+	public void start() {
+		processingUnit.setExecutionFactor(getExecutionFactor());
+		processingUnit.start();
+		super.start();
+	}
 
 	@Override
 	public void doTheWork(UUID input) {
@@ -109,6 +114,7 @@ public class Zone extends APauseAbleThread<UUID> implements ProcessingUnitListen
 	@Override
 	public synchronized void resumeExec() {
 		super.resumeExec();
+		processingUnit.setExecutionFactor(getExecutionFactor());
 		processingUnit.resumeExec();
 	}
 

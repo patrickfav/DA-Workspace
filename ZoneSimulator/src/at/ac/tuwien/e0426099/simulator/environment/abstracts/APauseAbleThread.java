@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.abstracts;
 
-import at.ac.tuwien.e0426099.simulator.environment.Env;
+import at.ac.tuwien.e0426099.simulator.environment.EnvConst;
 import at.ac.tuwien.e0426099.simulator.helper.Log;
 
 import java.util.concurrent.BlockingDeque;
@@ -18,18 +18,20 @@ import java.util.concurrent.locks.ReentrantLock;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class APauseAbleThread<T> extends Thread {
-	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_SYNCTHREAD);
+	private Log log = new Log(this, EnvConst.VERBOSE_LOG_MODE_GENERAL && EnvConst.VERBOSE_LOG_MODE_SYNCTHREAD);
     private BlockingDeque<T> workerQueue;
     private Semaphore pauseSemaphore;
     private volatile boolean isOnPause;
 	private boolean workSwitch;
 	private Lock workLock;
+	private double executionFactor;
 
     public APauseAbleThread() {
         workerQueue = new LinkedBlockingDeque<T>();
         pauseSemaphore=new Semaphore(0,false);
 		workSwitch=true;
 		workLock = new ReentrantLock();
+		executionFactor=1.0;
     }
 
     @Override
@@ -42,7 +44,7 @@ public abstract class APauseAbleThread<T> extends Thread {
             }
             log.d("[Sync] Waiting for dispatching next task");
 			try {
-				T obj = workerQueue.poll(Env.THREAD_BLOCKING_TIMEOUT_SEC, TimeUnit.SECONDS);
+				T obj = workerQueue.poll(EnvConst.THREAD_BLOCKING_TIMEOUT_SEC, TimeUnit.SECONDS);
 				if(obj != null) {
 					doTheWork(obj);
 				} else {
@@ -100,5 +102,13 @@ public abstract class APauseAbleThread<T> extends Thread {
 
 	public Lock getWorkLock() {
 		return workLock;
+	}
+
+	public double getExecutionFactor() {
+		return executionFactor;
+	}
+
+	public void setExecutionFactor(double executionFactor) {
+		this.executionFactor =  executionFactor;
 	}
 }

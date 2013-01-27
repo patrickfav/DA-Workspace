@@ -35,11 +35,13 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 	private ProcessingUnitListener processingUnit;
 	private String coreName;
 	private List<SubTaskId> currentRunningTasks;
+	private boolean executionFactorChanged;
 
 	public ProcessingCore(RawProcessingPower rawProcessingPower, int maxConcurrentTasks, double concurrentTaskPenaltyPercentage) {
 		this.rawProcessingPower = rawProcessingPower;
 		this.maxConcurrentTasks = maxConcurrentTasks;
 		this.concurrentTaskPenaltyPercentage = concurrentTaskPenaltyPercentage;
+		executionFactorChanged =false;
 		coreName ="Unassigned Core";
 		currentRunningTasks=Collections.synchronizedList(new ArrayList<SubTaskId>());
 		id=UUID.randomUUID();
@@ -174,6 +176,12 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		runAllTasks();
 	}
 
+	@Override
+	public void setExecutionFactor(double executionFactor) {
+		super.setExecutionFactor(executionFactor);
+		executionFactorChanged =true;
+	}
+
 	/* ********************************************************************************** CALLBACKS */
 
     @Override
@@ -259,8 +267,13 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		for(SubTaskId t: currentRunningTasks) {
 			getLog().v("Run Task "+t+".");
 			try {
+				if(executionFactorChanged) {
+					Env.get().getZone(zoneId).getSubTaskForProcessor(t).setExecutionFactor(getExecutionFactor());
+					executionFactorChanged=false;
+				}
 				Env.get().getZone(zoneId).getSubTaskForProcessor(t).run();
 			} catch (Exception e) {
+				Env.get().getZone(zoneId).getSubTaskForProcessor(t).fail(e);
 				getLog().e("Exception caught while trying to run all tasks",e);
 			}
 		}

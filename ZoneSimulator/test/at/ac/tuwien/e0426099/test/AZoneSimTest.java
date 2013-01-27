@@ -24,4 +24,12 @@ public abstract class AZoneSimTest {
 	protected long getFixedLongGaussian(long mean, long std_deviance) {
 		return (long) fixedRandom.nextGaussian() * std_deviance + mean;
 	}
+
+	protected void sleepUninterruptly(long ms){
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 }

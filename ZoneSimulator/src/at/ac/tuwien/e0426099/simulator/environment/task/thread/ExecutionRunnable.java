@@ -1,6 +1,6 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.thread;
 
-import at.ac.tuwien.e0426099.simulator.environment.Env;
+import at.ac.tuwien.e0426099.simulator.environment.EnvConst;
 import at.ac.tuwien.e0426099.simulator.environment.task.listener.ExecutionCallback;
 import at.ac.tuwien.e0426099.simulator.helper.Log;
 
@@ -11,7 +11,7 @@ import at.ac.tuwien.e0426099.simulator.helper.Log;
  * @since 09.12.12
  */
 public class ExecutionRunnable implements Runnable{
-	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL && Env.VERBOSE_LOG_MODE_SLEEPTHREAD);
+	private Log log = new Log(this, EnvConst.VERBOSE_LOG_MODE_GENERAL && EnvConst.VERBOSE_LOG_MODE_SLEEPTHREAD);
 	private long timeToExecute;
 	private ExecutionCallback executionCallback;
 
@@ -37,5 +37,11 @@ public class ExecutionRunnable implements Runnable{
 			log.v("Exception caught");
 			executionCallback.onExecException(e);
 		}
+	}
+
+
+	@Override
+	public String toString() {
+		return "[ExecThread]";
 	}
 }

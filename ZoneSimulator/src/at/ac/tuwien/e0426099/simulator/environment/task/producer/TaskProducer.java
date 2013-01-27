@@ -1,12 +1,13 @@
 package at.ac.tuwien.e0426099.simulator.environment.task.producer;
 
 import at.ac.tuwien.e0426099.simulator.environment.Env;
+import at.ac.tuwien.e0426099.simulator.environment.EnvConst;
 import at.ac.tuwien.e0426099.simulator.environment.task.ComputationalSubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.Task;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTask;
 import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ITask;
 import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.ComputationalSubTaskTemplate;
-import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.ISubTaskTemplate;
+import at.ac.tuwien.e0426099.simulator.environment.task.interfaces.ISubTaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.task.producer.templates.TaskTemplate;
 import at.ac.tuwien.e0426099.simulator.environment.zone.ZoneId;
 import at.ac.tuwien.e0426099.simulator.math.Point;
@@ -23,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @since 25.01.13
  */
 public class TaskProducer extends Thread{
-	private Log log = new Log(this, Env.VERBOSE_LOG_MODE_GENERAL);
+	private Log log = new Log(this, EnvConst.VERBOSE_LOG_MODE_GENERAL);
 	private static final int FREQUENCY_MS = 150; //how long a cycle is
 
 	private LinearGraph timeUsageGarph;

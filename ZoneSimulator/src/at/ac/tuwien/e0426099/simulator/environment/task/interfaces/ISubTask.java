@@ -41,6 +41,13 @@ public interface ISubTask {
 	public void setZoneId(ZoneId id);
 
 	/**
+	 * The execution factor will be used to divide the computed normal exec time (e.g. 2.0 will
+	 * make the exec twice as fast)
+	 * @param factor
+	 */
+	public void setExecutionFactor(double factor);
+
+	/**
 	 * Will pause the current execution
 	 */
 	public void pause();

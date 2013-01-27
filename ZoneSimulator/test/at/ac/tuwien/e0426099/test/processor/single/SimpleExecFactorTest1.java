@@ -13,7 +13,7 @@ import static junit.framework.Assert.assertTrue;
  * @author PatrickF
  * @since 13.12.12
  */
-public class ConfigAbleTest1 extends AProcessorTest{
+public class SimpleExecFactorTest1 extends AProcessorTest{
 
 	@Before
 	public void setUp() {
@@ -29,8 +29,38 @@ public class ConfigAbleTest1 extends AProcessorTest{
 			Env.get().getZone(id).addTask(t);
 		}
 
-		Env.get().start();
-		
+		Env.get().start(1.1);
+
+		sleepUninterruptly(2*1000);
+		Env.get().pause();
+		sleepUninterruptly(5*1000);
+
+		Env.get().resume(2.0);
+
+		sleepUninterruptly(2*1000);
+		Env.get().pause();
+		sleepUninterruptly(5*1000);
+
+		Env.get().resume(0.75);
+
+		sleepUninterruptly(2*1000);
+		Env.get().pause();
+		sleepUninterruptly(5*1000);
+
+		Env.get().resume(0.5);
+
+		sleepUninterruptly(2*1000);
+		Env.get().pause();
+		sleepUninterruptly(5*1000);
+
+		Env.get().resume(0.1);
+
+		sleepUninterruptly(2*1000);
+		Env.get().pause();
+		sleepUninterruptly(5*1000);
+
+		Env.get().resume(1.0);
+
 		assertTrue(Env.get().waitForFinish());
 	}
 }
