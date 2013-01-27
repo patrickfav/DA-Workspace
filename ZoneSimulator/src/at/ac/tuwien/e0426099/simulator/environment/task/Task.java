@@ -139,5 +139,6 @@ public class Task implements ITask{
 	private void setStatus(TaskStatus newStatus) {
 		log.d("Set status from " + status + " to " + newStatus);
 		this.status = newStatus;
+		log.refreshData();
 	}
 }
