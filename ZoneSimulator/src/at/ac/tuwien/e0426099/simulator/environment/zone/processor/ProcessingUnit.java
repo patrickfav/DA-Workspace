@@ -91,24 +91,6 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 	public String toString() {
 		return "["+ zoneId +"|CPU]";
 	}
-	/* ********************************************************************************** CALLBACKS */
-
-    @Override
-    public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
-		getLog().d("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
-		memoryCallBack.onSubTaskAdded(subTaskId);
-		finnishedSubTasks.add(subTaskId);
-		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
-        platformCallBack.onTaskFinished(c,subTaskId);
-    }
-
-    @Override
-    public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
-		getLog().d("task failed in "+c.getCoreName()+", spreading the word: "+subTaskId);
-		failedSubTasks.add(subTaskId);
-        addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
-        platformCallBack.onTaskFailed(c, subTaskId);
-    }
 
  	/* ********************************************************************************** THREAD ABSTRACT IMPL*/
 	 @Override
@@ -125,6 +107,13 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 		getWorkLock().lock();
 		if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
 			scheduler.addToQueue(input.getSubTaskId());
+		} else if(input.getActionType().equals(ActionWrapper.ActionType.FINISH)) {
+			memoryCallBack.onSubTaskAdded(input.getSubTaskId());
+			finnishedSubTasks.add(input.getSubTaskId());
+			platformCallBack.onTaskFinished(input.getCore(),input.getSubTaskId());
+		} else if(input.getActionType().equals(ActionWrapper.ActionType.FAIL)) {
+			failedSubTasks.add(input.getSubTaskId());
+			platformCallBack.onTaskFailed(input.getCore(), input.getSubTaskId());
 		}
 		scheduleTasks();
 		getWorkLock().unlock();
@@ -158,6 +147,20 @@ public class ProcessingUnit extends APauseAbleThread<ActionWrapper> implements P
 			c.resumeExec();
 		}
 	}
+	/* ********************************************************************************** CALLBACKS */
+
+	@Override
+	public void onTaskFinished(ProcessingCore c, SubTaskId subTaskId) {
+		getLog().d("task finished in "+c.getCoreName()+", spreading the word: "+subTaskId);
+		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.FINISH));
+	}
+
+	@Override
+	public void onTaskFailed(ProcessingCore c, SubTaskId subTaskId) {
+		getLog().d("task failed in "+c.getCoreName()+", spreading the word: "+subTaskId);
+		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.FAIL));
+	}
+
 	/* ********************************************************************************** PRIVATES */
 
 	private void scheduleTasks() {

@@ -195,11 +195,11 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			setStatus(SubTaskStatus.FINISHED);
 		}
 
-		releaseSempahore(duringAnyKindOfWork, "anyFinsish");
-
 		if(taskWorkManager.getComputationsLeftToDo() <= 0) {
 			callAllListenerFinished();
 		}
+
+		releaseSempahore(duringAnyKindOfWork, "anyFinsish");
 	}
 
 	@Override
@@ -210,8 +210,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 			releaseSempahore(waitForThread, "waitForThreadExecInterrupt");
 		} else if(status == SubTaskStatus.SIMULATED_ERROR) {
 			taskWorkManager.stopCurrentProcessing();
-			releaseSempahore(waitForThread, "waitForThreadException");
 			callAllListenerFailed();
+			releaseSempahore(waitForThread, "waitForThreadException");
 		} else {
 			log.w("Task interrupted but not from our Framework, that's strange. Status: "+status);
 		}
@@ -223,8 +223,8 @@ public class ComputationalSubTask implements IComputationalSubTask,ExecutionCall
 		setStatus(SubTaskStatus.CONCURRENT_ERROR);
 		exception=e;
 		log.e("Exception thrown while executing Thread",e);
-		releaseSempahore(waitForThread, "waitForThreadOnExecException");
 		callAllListenerFailed();
+		releaseSempahore(waitForThread, "waitForThreadOnExecException");
 	}
 
     /* ***************************************************************************** GETTER N SETTER */

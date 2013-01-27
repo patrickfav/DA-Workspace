@@ -56,7 +56,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 			throw new TooMuchConcurrentTasksException("Cannot add this task "+ Env.get().getZone(zoneId).getSubTaskForProcessor(subTaskId).getReadAbleName()+
 					" to core "+id+", since the maximum of "+maxConcurrentTasks+" is reached in this core.");
 		} else { //reshare processing power
-			addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.ADD));
+			addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.ADD,this));
 		}
 	}
 
@@ -141,9 +141,14 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		if(input.getActionType().equals(ActionWrapper.ActionType.ADD)) {
 			getLog().d("Add " + input.getSubTaskId() + " to running tasks");
 			currentRunningTasks.add(input.getSubTaskId()); //add new task
-		} else {
+		} else if(input.getActionType().equals(ActionWrapper.ActionType.FINISH)) {
 			getLog().d("Remove " + input.getSubTaskId() + " from running tasks");
-			currentRunningTasks.remove(input.getSubTaskId()); //add new task
+			currentRunningTasks.remove(input.getSubTaskId()); //remove
+			processingUnit.onTaskFinished(this,input.getSubTaskId()); //inform processing unit
+		} else if(input.getActionType().equals(ActionWrapper.ActionType.FAIL)) {
+			getLog().d("Remove " + input.getSubTaskId() + " from running tasks");
+			currentRunningTasks.remove(input.getSubTaskId()); //remove
+			processingUnit.onTaskFailed(this,input.getSubTaskId()); //inform processing unit
 		}
 		reBalanceTasks();
 		runAllTasks();
@@ -187,15 +192,13 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
     @Override
     public void onTaskFinished(SubTaskId subTaskId) {
 		getLog().d("Task onFinish called by " + subTaskId);
-		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
-        processingUnit.onTaskFinished(this,subTaskId); //inform processing unit
+		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.FINISH,this));
     }
 
     @Override
     public void onTaskFailed(SubTaskId subTaskId) {
 		getLog().d("Task onFail called by " + subTaskId);
-		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.REMOVE));
-		processingUnit.onTaskFailed(this, subTaskId); //inform processing unit
+		addToWorkerQueue(new ActionWrapper(subTaskId, ActionWrapper.ActionType.FAIL,this));
     }
 
 

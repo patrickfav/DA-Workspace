@@ -9,6 +9,7 @@ public class EnvConst {
 
 	/* log config */
 	public static final boolean VERBOSE_LOG_MODE_GENERAL = true;
+
 	public static final boolean VERBOSE_LOG_MODE_SUBTASK = true;
 	public static final boolean VERBOSE_LOG_MODE_TASK = true;
 	public static final boolean VERBOSE_LOG_MODE_SYNCTHREAD = true;
