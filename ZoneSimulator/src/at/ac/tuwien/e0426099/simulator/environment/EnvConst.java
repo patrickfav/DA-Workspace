@@ -18,7 +18,7 @@ public class EnvConst {
 
 	/* blocking timeout config*/
 	public static final int SUBTASK_WAIT_TIMEOUT_SEC = 30;
-	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 10;
+	public static final int THREAD_BLOCKING_TIMEOUT_SEC = 100;
 
 	/* execution factor config */
 	public static final double MIN_EXEC_FACTOR = 0.1;

@@ -40,7 +40,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 	public ProcessingCore(RawProcessingPower rawProcessingPower, int maxConcurrentTasks, double concurrentTaskPenaltyPercentage) {
 		this.rawProcessingPower = rawProcessingPower;
 		this.maxConcurrentTasks = maxConcurrentTasks;
-		this.concurrentTaskPenaltyPercentage = concurrentTaskPenaltyPercentage;
+		rawProcessingPower.setPenalty(concurrentTaskPenaltyPercentage);
 		executionFactorChanged =false;
 		coreName ="Unassigned Core";
 		currentRunningTasks=Collections.synchronizedList(new ArrayList<SubTaskId>());
@@ -80,7 +80,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 		if(sum == 0)
 			return 0;
 
-		return Math.min(1,(double) sum / rawProcessingPower.getComputationsPerMsForPenalty(concurrentTaskPenaltyPercentage * (Math.max(0,currentRunningTasks.size() - 1))));
+		return Math.min(1,(double) sum / rawProcessingPower.getComputationsPerMsForPenalty(currentRunningTasks.size()));
 	}
 
 	public ProcessingCoreInfo getInfo() {
@@ -227,7 +227,7 @@ public class ProcessingCore extends APauseAbleThread<ActionWrapper> implements I
 	/* ********************************************************************************** PRIVATES */
 
 	private void reBalanceTasks() {
-		double currentProcPwrP = rawProcessingPower.getComputationsPerMsForPenalty(concurrentTaskPenaltyPercentage * (Math.max(0,currentRunningTasks.size() - 1))); //pwr - penality for concurrent processing
+		double currentProcPwrP = rawProcessingPower.getComputationsPerMsForPenalty(currentRunningTasks.size()); //pwr - penality for concurrent processing
 		double maxProcPwrPerTask =  currentProcPwrP/Math.max(1, currentRunningTasks.size()); //fairly shared resources
 
 		getLog().d("Rebalance tasks. CurrentPower with penality "+concurrentTaskPenaltyPercentage+" is "+currentProcPwrP+" and will be divided upon "+currentRunningTasks.size()+" running tasks, so maxPowerIs "+maxProcPwrPerTask+" per task");
