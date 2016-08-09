@@ -1,9 +1,9 @@
 # Zone Simulator
 
 This is a task execution simulator (simulating parallel executions of task in an operating system) originally developed for
-my first master thesis to process migration to other VMs if the response time is over a certain threshold. The thesis
-was canceled due to circumstances out of my influence. It was a really good exercise to learn the whole
-all aspects of concurrency in Java (i.e. the whole `java.util.concurrent` package).
+my first master thesis about process migration to other VMs in a cloud system if the response time is over a certain threshold. 
+The thesis was canceled due to circumstances out of my influence, however (see https://github.com/patrickfav/indoor-positioning).
+It was a really good exercise to learn the whole all aspects of concurrency in Java (i.e. the whole `java.util.concurrent` package), though.
 
 ## Build
 
