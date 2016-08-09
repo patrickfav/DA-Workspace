@@ -5,8 +5,6 @@ import at.ac.tuwien.e0426099.simulator.math.distributions.IRandomDistribution;
 import at.ac.tuwien.e0426099.simulator.math.distributions.NormalDistribution;
 import at.ac.tuwien.e0426099.simulator.math.distributions.UniformDistribution;
 import at.ac.tuwien.e0426099.test.AZoneSimTest;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertTrue;
